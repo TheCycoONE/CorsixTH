@@ -1,0 +1,38 @@
+#SDL
+SET(SDLMAIN_LIBRARY "C:\\Libraries\\SDL-1.2.15\\lib\\x64\\SDLmain.lib" CACHE FILEPATH "" FORCE)
+SET(SDL_LIBRARY_TEMP "C:\\Libraries\\SDL-1.2.15\\lib\\x64\\SDL.lib" CACHE FILEPATH "" FORCE)
+SET(SDL_INCLUDE_DIR "C:\\Libraries\\SDL-1.2.15\\include" CACHE PATH "" FORCE)
+
+#Lua
+SET(LUA_LIBRARY "C:\\Libraries\\Lua-5.1.4-win64\\lua5.1.lib" CACHE FILEPATH "" FORCE)
+SET(LUA_INCLUDE_DIR "C:\\Libraries\\Lua-5.1.4-win64\\include" CACHE PATH "" FORCE)
+
+#FFmpeg
+SET(AVFORMAT_LIBRARIES "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\lib\\avformat.lib" CACHE FILEPATH "" FORCE)
+SET(AVCODEC_LIBRARIES "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\lib\\avcodec.lib" CACHE FILEPATH "" FORCE)
+SET(AVUTIL_LIBRARIES "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\lib\\avutil.lib" CACHE FILEPATH "" FORCE)
+SET(SWSCALE_LIBRARIES "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\lib\\swscale.lib" CACHE FILEPATH "" FORCE)
+SET(SWRESAMPLE_LIBRARIES "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\lib\\swresample.lib" CACHE FILEPATH "" FORCE)
+
+SET(AVFORMAT_INCLUDE_DIRS "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\include" CACHE PATH "" FORCE)
+SET(AVCODEC_INCLUDE_DIRS "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\include" CACHE PATH "" FORCE)
+SET(AVUTIL_INCLUDE_DIRS "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\include" CACHE PATH "" FORCE)
+SET(SWSCALE_INCLUDE_DIRS "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\include" CACHE PATH "" FORCE)
+SET(SWRESAMPLE_INCLUDE_DIRS "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\include" CACHE PATH "" FORCE)
+
+#SDL_Mixer
+SET(SDLMIXER_LIBRARY "C:\\Libraries\\SDL_mixer-1.2.12\\lib\\x64\\SDL_mixer.lib" CACHE PATH "" FORCE)
+SET(SDLMIXER_INCLUDE_DIR "C:\\Libraries\\SDL_mixer-1.2.12\\include" CACHE PATH "" FORCE)
+
+#Freetype
+SET(FREETYPE_LIBRARY "C:\\Libraries\\freetype-2.4.11\\lib\\x64\\freetype2411.lib" CACHE FILEPATH "" FORCE)
+SET(FREETYPE_INCLUDE_DIR_freetype2 "C:\\Libraries\\freetype-2.4.11\\include\\freetype" CACHE PATH "" FORCE)
+SET(FREETYPE_INCLUDE_DIR_ft2build "C:\\Libraries\\freetype-2.4.11\\include" CACHE PATH "" FORCE)
+
+#MSIntTypes
+SET(MSINTTYPES_INCLUDE_DIRS "C:\\Libraries\\msinttypes\\" CACHE PATH "" FORCE)
+
+#WxWidgets
+SET(wxWidgets_ROOT_DIR "C:\\Libraries\\wxWidgets-2.9.4" CACHE PATH "" FORCE)
+SET(wxWidgets_LIB_DIR "C:\\Libraries\\wxWidgets-2.9.4\\lib\\vc100_x64_dll" CACHE PATH "" FORCE)
+
