@@ -71,22 +71,24 @@ copy C:\Libraries\Lua-5.1.4-win64\lua5.1.dll ..\x64dlls\
 copy C:\Libraries\freetype-2.4.11\lib\x64\freetype2411.dll ..\x64dlls\
 
 :Copy2Installer
-copy ..\x86dlls\* x86\
-copy ..\x86-opengl\CorsixTH\Release\CorsixTH_OpenGL.exe x86\
-copy ..\x86-opengl\AnimView\Release\AnimView.exe x86\
-copy ..\x86-opengl\MapEdit\Release\MapEdit.exe x86\
-copy ..\x86-sdl\CorsixTH\Release\CorsixTH_SDL.exe x86\
-copy ..\x86-directx\CorsixTH\Release\CorsixTH_DirectX.exe x86\
-mkdir x86\Src
-mkdir x86\Src\shaders
-copy ..\CorsixTH\Src\shaders\* x86\Src\shaders\
+mkdir .\x86
+copy ..\x86dlls\* .\x86\
+copy ..\x86-opengl\CorsixTH\Release\CorsixTH_OpenGL.exe .\x86\
+copy ..\x86-opengl\AnimView\Release\AnimView.exe .\x86\
+copy ..\x86-opengl\MapEdit\Release\MapEdit.exe .\x86\
+copy ..\x86-sdl\CorsixTH\Release\CorsixTH_SDL.exe .\x86\
+copy ..\x86-directx\CorsixTH\Release\CorsixTH_DirectX.exe .\x86\
+mkdir .\x86\Src
+mkdir .\x86\Src\shaders
+copy ..\CorsixTH\Src\shaders\* .\x86\Src\shaders\
 
-copy ..\x64dlls\* x64\
-copy ..\x64-opengl\CorsixTH\Release\CorsixTH_OpenGL.exe x64\
-copy ..\x64-opengl\AnimView\Release\AnimView.exe x64\
-copy ..\x64-opengl\MapEdit\Release\MapEdit.exe x64\
-copy ..\x64-sdl\CorsixTH\Release\CorsixTH_SDL.exe x64\
-copy ..\x64-directx\CorsixTH\Release\CorsixTH_DirectX.exe x64\
-mkdir x64\Src
-mkdir x64\Src\shaders
-copy ..\CorsixTH\Src\shaders\* x64\Src\shaders\
+mkdir .\x64
+copy ..\x64dlls\* .\x64\
+copy ..\x64-opengl\CorsixTH\Release\CorsixTH_OpenGL.exe .\x64\
+copy ..\x64-opengl\AnimView\Release\AnimView.exe .\x64\
+copy ..\x64-opengl\MapEdit\Release\MapEdit.exe .\x64\
+copy ..\x64-sdl\CorsixTH\Release\CorsixTH_SDL.exe .\x64\
+copy ..\x64-directx\CorsixTH\Release\CorsixTH_DirectX.exe .\x64\
+mkdir .\x64\Src
+mkdir .\x64\Src\shaders
+copy ..\CorsixTH\Src\shaders\* .\x64\Src\shaders\
