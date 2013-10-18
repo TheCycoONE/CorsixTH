@@ -50,7 +50,7 @@ copy C:\Libraries\ffmpeg-1.0.1-win32-dev\lib\avcodec-54.dll ..\x86dlls\
 copy C:\Libraries\ffmpeg-1.0.1-win32-dev\lib\avutil-51.dll ..\x86dlls\
 copy C:\Libraries\ffmpeg-1.0.1-win32-dev\lib\swscale-2.dll ..\x86dlls\
 copy C:\Libraries\ffmpeg-1.0.1-win32-dev\lib\swresample-0.dll ..\x86dlls\
-copy C:\Libraries\Lua-5.1.4-win32\lua5.1.dll ..\x86dlls\
+copy C:\Libraries\LuaJIT-2.0.2\x86\lua51.dll ..\x86dlls\
 copy C:\Libraries\freetype-2.4.11\lib\x86\freetype2411.dll ..\x86dlls\
 
 :x64Dlls
@@ -67,7 +67,7 @@ copy C:\Libraries\ffmpeg-1.0.1-win64-dev\lib\avcodec-54.dll ..\x64dlls\
 copy C:\Libraries\ffmpeg-1.0.1-win64-dev\lib\avutil-51.dll ..\x64dlls\
 copy C:\Libraries\ffmpeg-1.0.1-win64-dev\lib\swscale-2.dll ..\x64dlls\
 copy C:\Libraries\ffmpeg-1.0.1-win64-dev\lib\swresample-0.dll ..\x64dlls\
-copy C:\Libraries\Lua-5.1.4-win64\lua5.1.dll ..\x64dlls\
+copy C:\Libraries\LuaJIT-2.0.2\x64\lua51.dll ..\x64dlls\
 copy C:\Libraries\freetype-2.4.11\lib\x64\freetype2411.dll ..\x64dlls\
 
 :Copy2Installer

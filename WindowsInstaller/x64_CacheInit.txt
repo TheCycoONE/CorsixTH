@@ -4,8 +4,8 @@ SET(SDL_LIBRARY_TEMP "C:\\Libraries\\SDL-1.2.15\\lib\\x64\\SDL.lib" CACHE FILEPA
 SET(SDL_INCLUDE_DIR "C:\\Libraries\\SDL-1.2.15\\include" CACHE PATH "" FORCE)
 
 #Lua
-SET(LUA_LIBRARY "C:\\Libraries\\Lua-5.1.4-win64\\lua5.1.lib" CACHE FILEPATH "" FORCE)
-SET(LUA_INCLUDE_DIR "C:\\Libraries\\Lua-5.1.4-win64\\include" CACHE PATH "" FORCE)
+SET(LUA_LIBRARY "C:\\Libraries\\LuaJIT-2.0.2\\x64\\lua51.lib" CACHE FILEPATH "" FORCE)
+SET(LUA_INCLUDE_DIR "C:\\Libraries\\LuaJIT-2.0.2\\src" CACHE PATH "" FORCE)
 
 #FFmpeg
 SET(AVFORMAT_LIBRARIES "C:\\Libraries\\ffmpeg-1.0.1-win64-dev\\lib\\avformat.lib" CACHE FILEPATH "" FORCE)
