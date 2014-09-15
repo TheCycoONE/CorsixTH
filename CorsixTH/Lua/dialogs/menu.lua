@@ -25,7 +25,7 @@ local TH = require "TH"
 --! The ingame menu bar which sits (nominally hidden) at the top of the screen.
 class "UIMenuBar" (Window)
 
-function UIMenuBar:UIMenuBar(ui)
+function UIMenuBar:UIMenuBar(ui, map_editor)
   self:Window()
 
   local app = ui.app
@@ -48,7 +48,7 @@ function UIMenuBar:UIMenuBar(ui)
   -- This list satifies: open_menus[x] == nil or open_menus[x].level == x
   self.open_menus = {}
 
-  self:makeMenu(app)
+  self:makeMenu(app, map_editor)
 end
 
 function UIMenuBar:onTick()
@@ -512,7 +512,16 @@ function UIMenu:appendMenu(text, menu)
   }
 end
 
-function UIMenuBar:makeMenu(app)
+function UIMenuBar:makeMenu(app, map_editor)
+  if map_editor then
+    local menu = UIMenu()
+    menu:appendItem(_S.menu_file.load, function() self.ui:addWindow(UILoadGame(self.ui, "game")) end)
+      :appendItem(_S.menu_file.save, function() self.ui:addWindow(UISaveGame(self.ui)) end)
+      :appendItem(_S.menu_file.quit, function() self.ui:quit() end)
+    self:addMenu(_S.menu.file, menu)
+    return
+  end
+
   local menu = UIMenu()
   menu:appendItem(_S.menu_file.load, function() self.ui:addWindow(UILoadGame(self.ui, "game")) end)
     :appendItem(_S.menu_file.save, function() self.ui:addWindow(UISaveGame(self.ui)) end)
