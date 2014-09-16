@@ -229,13 +229,44 @@ function Patient:getTreatmentDiseaseId()
   end
 end
 
+--! Estimate the subjective perceived distortion between the price level the
+--! patient might expect considering the reputation and the cure effectiveness
+--! of a given treatment and the staff internal state.
+--!param casebook (table): casebook entry for the treatment.
+--!return (float) [-1, 1]. The smaller the value is, the more the patient
+--! considers the bill to be under-priced. The bigger the value is, the more
+--! the patient patient considers the bill to be over-priced.
+function Patient:getPriceDistortion(casebook)
+  local room = self:getRoom()
+
+  -- weights
+  local staff_quality_weight = 0.5
+  local reputation_weight = 0.4
+  local effectiveness_weight = 0.1
+
+  -- map the different variables to [0-1] and merge them
+  local reputation = casebook.reputation or self.hospital.reputation
+  local effectiveness = casebook.cure_effectiveness
+
+  local weighted_staff_quality = staff_quality_weight * room:getStaffServiceQuality()
+  local weighted_reputation = reputation_weight * (reputation / 1000)
+  local weighted_effectiveness = effectiveness_weight * (effectiveness / 100)
+
+  local expected_price_level = weighted_staff_quality + weighted_reputation + weighted_effectiveness
+
+  -- map to [0-1]
+  local price_level = ((casebook.price - 0.5) / 3) * 2
+
+  return price_level - expected_price_level
+end
+
 function Patient:treated() -- If a drug was used we also need to pay for this
   local hospital = self.hospital
   local amount = self.hospital.disease_casebook[self.disease.id].drug_cost or 0
   hospital:receiveMoneyForTreatment(self)
   if amount ~= 0 then
-  local str = _S.drug_companies[math.random(1 , 5)]
-  hospital:spendMoney(amount, _S.transactions.drug_cost .. ": " .. str)
+    local str = _S.drug_companies[math.random(1 , 5)]
+    hospital:spendMoney(amount, _S.transactions.drug_cost .. ": " .. str)
   end
 
   -- Either the patient is no longer sick, or he/she dies.
