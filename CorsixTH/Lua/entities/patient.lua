@@ -263,31 +263,34 @@ end
 function Patient:treated() -- If a drug was used we also need to pay for this
   local hospital = self.hospital
   local amount = self.hospital.disease_casebook[self.disease.id].drug_cost or 0
-  hospital:receiveMoneyForTreatment(self)
+  local over_priced = not self:agreesToPay()
+  if not over_priced then
+    hospital:receiveMoneyForTreatment()
+  end
   if amount ~= 0 then
     local str = _S.drug_companies[math.random(1 , 5)]
     hospital:spendMoney(amount, _S.transactions.drug_cost .. ": " .. str)
   end
 
   -- Either the patient is no longer sick, or he/she dies.
-
   local cure_chance = hospital.disease_casebook[self.disease.id].cure_effectiveness
   cure_chance = cure_chance * self.diagnosis_progress
   if self.die_anims and math.random(1, 100) > cure_chance then
     self:die()
+  else if self.die_anims and math.random(1, 100) > (self.diagnosis_progress * 100) then
+    self:die()
   else
-    -- to guess the cure is risky and the patient could die
-    if self.die_anims and math.random(1, 100) > (self.diagnosis_progress * 100) then
-      self:die()
+    self.hospital:msgCured()
+    self.cured = true
+    self.infected = false
+    self.attributes["health"] = 1
+    self.treatment_history[#self.treatment_history + 1] = _S.dynamic_info.patient.actions.cured
+    if over_priced then
+      self:goHome("over_priced")
     else
-      self.hospital:msgCured()
-      self.cured = true
-      self.infected = false
-      self.attributes["health"] = 1
-      self.treatment_history[#self.treatment_history + 1] = _S.dynamic_info.patient.actions.cured
       self:goHome("cured")
-      self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
     end
+    self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
   end
 
   hospital:updatePercentages()
@@ -302,6 +305,16 @@ function Patient:treated() -- If a drug was used we also need to pay for this
       end
     end
   end
+end
+
+--! Returns true if patient agrees to pay for the last treatement.
+function Patient:agreesToPay()
+  local casebook_id = self:getTreatmentDiseaseId()
+  local casebook = self.hospital.disease_casebook[casebook_id]
+  local price_distortion = self:getPriceDistortion(casebook)
+  local is_over_priced = price_distortion > self.hospital.over_priced_threshold
+
+  return not (is_over_priced and math.random(1, 5) == 1)
 end
 
 function Patient:die()
@@ -559,6 +572,22 @@ function Patient:goHome(reason)
       local casebook = hosp.disease_casebook[self.disease.id]
       casebook.turned_away = casebook.turned_away + 1
     end
+  elseif reason == "over_priced" then
+    self:setMood("sad_money", "activate")
+    self:changeAttribute("happiness", -0.5)
+    local treatment_name = patient.hospital.disease_casebook[patient:getTreatmentDiseaseId()].disease.name
+    self.world.ui.adviser:say(_A.warnings.patient_not_paying:format(treatment_name))
+    if not self.is_debug then
+      if self.cured then
+       self:countCured()
+      else
+        hosp.not_cured = hosp.not_cured + 1
+        hosp.not_cured_ty = hosp.not_cured_ty + 1
+      end
+      hosp:changeReputation("over_priced", self.disease)
+    end
+    self:clearDynamicInfo()
+    self:updateDynamicInfo(_S.dynamic_info.patient.actions.prices_too_high)
   else
     TheApp.world:gameLog("Error: unknown reason " .. reason .. "!")
   end

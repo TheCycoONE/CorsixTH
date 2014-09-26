@@ -173,7 +173,11 @@ function Room:dealtWithPatient(patient)
 
     patient:completeDiagnosticStep(self)
     patient:queueAction{name = "seek_room", room_type = "gp"}
-    self.hospital:receiveMoneyForTreatment(patient)
+    if patient:agreesToPay() then
+      self.hospital:receiveMoneyForTreatment(patient)
+    else
+      patient:goHome("over_priced")
+    end
   elseif patient.disease and patient.diagnosed then
     -- Patient just been in a cure room, so either patient now cured, or needs
     -- to move onto next cure room.
@@ -984,7 +988,6 @@ function Room:isDiagnosisRoomForPatient(patient)
     return true
   end
 end
-
 
 --! Get the average service quality of the staff members in the room.
 --!return (float) [0-1] Average staff service quality.
