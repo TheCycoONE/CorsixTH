@@ -254,15 +254,13 @@ function Patient:treated() -- If a drug was used we also need to pay for this
     hospital:spendMoney(amount, _S.transactions.drug_cost .. ": " .. str)
   end
 
-  -- Either the patient is no longer sick, or he/she dies.
+  -- Either the patient is no longer sick, either he/she dies, either he/she
+  -- already left this hospital (in this case self.hospital is nil)
 
-  local cure_chance = hospital.disease_casebook[self.disease.id].cure_effectiveness
-  cure_chance = cure_chance * self.diagnosis_progress
-  if self.die_anims and math.random(1, 100) > cure_chance then
-    self:die()
-  else
-    -- to guess the cure is risky and the patient could die
-    if self.die_anims and math.random(1, 100) > (self.diagnosis_progress * 100) then
+  if self.hospital ~= nil then
+    local cure_chance = hospital.disease_casebook[self.disease.id].cure_effectiveness
+    cure_chance = cure_chance * self.diagnosis_progress
+    if self.die_anims and math.random(1, 100) > cure_chance then
       self:die()
     else
       self.hospital:msgCured()
@@ -290,8 +288,8 @@ function Patient:treated() -- If a drug was used we also need to pay for this
 end
 
 function Patient:die()
-  -- It may happen that this patient was just cured and then the room blew up.
-  -- (Hospital not set when going home)
+  -- It may happen that this patient was just cured and then the room blew up
+  -- or that he/she refused to pay the bill (Hospital not set when going home)
   local hospital = self.hospital or self.world:getLocalPlayerHospital()
 
   if hospital.num_deaths < 1 then
@@ -543,6 +541,19 @@ function Patient:goHome(reason)
       hosp.not_cured_ty = hosp.not_cured_ty + 1
       local casebook = hosp.disease_casebook[self.disease.id]
       casebook.turned_away = casebook.turned_away + 1
+    end
+  elseif reason == "over_priced" then
+    self:setMood("sad_money", "activate")
+    self:changeAttribute("happiness", -0.5)
+    if not self.is_debug then
+      hosp:changeReputation("over_priced", self.disease)
+      -- The patient refused to pay for diagnostic or an "intermediate" treatment
+      if not self.cured then
+        hosp.not_cured = hosp.not_cured + 1
+        hosp.not_cured_ty = hosp.not_cured_ty + 1
+        self:clearDynamicInfo()
+        self:updateDynamicInfo(_S.dynamic_info.patient.actions.prices_too_high)
+      end
     end
   else
     TheApp.world:gameLog("Error: unknown reason " .. reason .. "!")
