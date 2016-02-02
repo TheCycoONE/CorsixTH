@@ -189,7 +189,20 @@ function Room:dealtWithPatient(patient)
         patient:queueAction{name = "seek_room", room_type = next_room}
       else
         -- Patient is "done" at the hospital
-        patient:treated()
+        if patient:isTreatmentEffective() then
+          patient:cure()
+          if patient:agreesToPay() then
+            self.hospital:receiveMoneyForTreatment(patient)
+            patient:goHome("cured")
+          else
+            patient:goHome("over_priced")
+          end
+        else
+          patient:die()
+        end
+
+        self.hospital:paySupplierForDrug(patient)
+        patient:checkEmergency()
       end
     end
   else
