@@ -214,68 +214,71 @@ function Patient:setHospital(hospital)
   end
 end
 
---! Estimate the subjective perceived distortion between the price level the
---! patient might expect considering the reputation and the cure effectiveness
---! of a given treatment and the staff internal state.
---! Returns a float between [-1, 1]. The smaller the value is, the more the
---! patient considers the bill to be under-priced. The bigger the value is, the
---! more the patient patient considers the bill to be over-priced.
---!param casebook (table): casebook entry for the treatment.
-function Patient:computePriceDistortion(casebook)
-  local room = self:getRoom()
-
-  -- weights
-  local staff_quality_weight = 0.5
-  local reputation_weight = 0.4
-  local effectiveness_weight = 0.1
-
-  -- map the different variables to [0-1] and merge them
-  local reputation = casebook.reputation or self.hospital.reputation
-  local effectiveness = casebook.cure_effectiveness
-
-  local weighted_staff_quality = staff_quality_weight * room:getStaffServiceQuality()
-  local weighted_reputation = reputation_weight * (reputation / 1000)
-  local weighted_effectiveness = effectiveness_weight * (effectiveness / 100)
-
-  local expected_price_level = weighted_staff_quality + weighted_reputation + weighted_effectiveness
-
-  -- map to [0-1]
-  local price_level = ((casebook.price - 0.5) / 3) * 2
-
-  self.price_distortion = price_level - expected_price_level
+--! Returns the most recent casebook id; more precisely:
+--! If the patient is already diagnosed, returns the disease id
+--! (e.g. 'infectious_laughter', 'unexpected_swelling', etc.)
+--! Otherwise, returns the most recent diagnostic room id
+--! (e.g. 'diag_gp', 'diag_scanner', etc.)
+function Patient:getCasebookId()
+  if self.diagnosed then
+    return self.disease.id
+  else
+    local room_info = self:getRoom()
+    if not room_info then
+      print("Warning: Trying to receieve money for treated patient who is "..
+              "not in a room")
+      return
+    end
+    room_info = room_info.room_info
+    return "diag_" .. room_info.id
+  end
 end
 
-function Patient:treated() -- If a drug was used we also need to pay for this
-  local hospital = self.hospital
-  local amount = self.hospital.disease_casebook[self.disease.id].drug_cost or 0
-  hospital:receiveMoneyForTreatment(self)
-  if amount ~= 0 then
-    local str = _S.drug_companies[math.random(1 , 5)]
-    hospital:spendMoney(amount, _S.transactions.drug_cost .. ": " .. str)
+--! Returns true if patient agrees to pay for the last treatement.
+function Patient:agreesToPay()
+  --! Estimate the subjective perceived distortion between the price level the
+  --! patient might expect considering the reputation and the cure effectiveness
+  --! of a given treatment and the staff internal state.
+  --! Returns a float between [-1, 1]. The smaller the value is, the more the
+  --! patient considers the bill to be under-priced. The bigger the value is, the
+  --! more the patient patient considers the bill to be over-priced.
+  --!param casebook (table): casebook entry for the treatment.
+  --!param patient (patient); patient whom we compute the price distortion
+  local function computePriceDistortion(casebook, patient)
+    local room = patient:getRoom()
+
+    -- weights
+    local staff_quality_weight = 0.5
+    local reputation_weight = 0.4
+    local effectiveness_weight = 0.1
+
+    -- map the different variables to [0-1] and merge them
+    local reputation = casebook.reputation or patient.hospital.reputation
+    local effectiveness = casebook.cure_effectiveness
+
+    local weighted_staff_quality = staff_quality_weight * room:getStaffServiceQuality()
+    local weighted_reputation = reputation_weight * (reputation / 1000)
+    local weighted_effectiveness = effectiveness_weight * (effectiveness / 100)
+
+    local expected_price_level = weighted_staff_quality + weighted_reputation + weighted_effectiveness
+
+    -- map to [0-1]
+    local price_level = ((casebook.price - 0.5) / 3) * 2
+
+    patient.price_distortion = price_level - expected_price_level
   end
 
-  -- Either the patient is no longer sick, either he/she dies, either he/she
-  -- already left this hospital (in this case self.hospital is nil)
+  local casebook_id = self:getCasebookId()
+  local casebook = self.hospital.disease_casebook[casebook_id]
+  computePriceDistortion(casebook, self)
+  local is_over_priced = self.price_distortion > self.hospital.over_priced_threshold
 
-  if self.hospital ~= nil then
-    local cure_chance = hospital.disease_casebook[self.disease.id].cure_effectiveness
-    cure_chance = cure_chance * self.diagnosis_progress
-    if self.die_anims and math.random(1, 100) > cure_chance then
-      self:die()
-    else
-      self.hospital:msgCured()
-      self.cured = true
-      self.infected = false
-      self.attributes["health"] = 1
-      self.treatment_history[#self.treatment_history + 1] = _S.dynamic_info.patient.actions.cured
-      self:goHome("cured")
-      self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
-    end
-  end
+  return not (is_over_priced and math.random(1, 5) == 1)
+end
 
-  hospital:updatePercentages()
-
+function Patient:checkEmergency()
   if self.is_emergency then
+    local hospital = self.hospital
     local killed = hospital.emergency.killed_emergency_patients
     local cured = hospital.emergency.cured_emergency_patients
     if killed + cured >= hospital.emergency.victims then
@@ -285,6 +288,26 @@ function Patient:treated() -- If a drug was used we also need to pay for this
       end
     end
   end
+end
+
+--! Either the patient is cured, or he/she dies.
+--! Returns: true if cured
+--!          false if dead
+function Patient:isTreatmentEffective()
+  local cure_chance = self.hospital.disease_casebook[self.disease.id].cure_effectiveness
+  cure_chance = cure_chance * self.diagnosis_progress
+
+  local die = self.die_anims and math.random(1, 100) > cure_chance
+          and math.random(1, 100) > (self.diagnosis_progress * 100)
+
+  return not die
+end
+
+--! Change patient internal state to "cured".
+function Patient:cure()
+  self.cured = true
+  self.infected = false
+  self.attributes["health"] = 1
 end
 
 function Patient:die()
@@ -508,6 +531,23 @@ end
 --! -"over_priced": When the patient decided to leave because he/she believes
 --! the last treatment is over-priced.
 function Patient:goHome(reason)
+  -- Returns: the name of the last diagnostic, if not yet diagnosed)
+  --          the name of the desease, if diagnosed
+  local function getLastTreatmentName(patient)
+    return patient.hospital.disease_casebook[patient:getCasebookId()].disease.name
+  end
+
+  -- Increments "cures" statistics
+  local function countCured(patient, casebook)
+    local hosp = patient.hospital
+    hosp.num_cured = hosp.num_cured + 1
+    hosp.num_cured_ty = hosp.num_cured_ty + 1
+    casebook.recoveries = casebook.recoveries + 1
+    if patient.is_emergency then
+      hosp.emergency.cured_emergency_patients = hosp.emergency.cured_emergency_patients + 1
+    end
+  end
+
   local hosp = self.hospital
   if not hosp and self.going_home then
     -- The patient should be going home already! Anything related to the hospital
@@ -516,6 +556,9 @@ function Patient:goHome(reason)
     self:despawn()
     return
   end
+
+  local casebook = hosp.disease_casebook[self.disease.id]
+
   if reason == "cured" then
     self:setMood("cured", "activate")
     self:changeAttribute("happiness", 0.8)
@@ -526,35 +569,32 @@ function Patient:goHome(reason)
     if hosp.num_cured < 1 then
       self.world.ui.adviser:say(_A.information.first_cure)
     end
-    hosp.num_cured = hosp.num_cured + 1
-    hosp.num_cured_ty = hosp.num_cured_ty + 1
-    local casebook = hosp.disease_casebook[self.disease.id]
-    casebook.recoveries = casebook.recoveries + 1
-    if self.is_emergency then
-      hosp.emergency.cured_emergency_patients = hosp.emergency.cured_emergency_patients + 1
-    end
+    countCured(self, casebook)
+    self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
+    self.hospital:msgCured()
   elseif reason == "kicked" then
     self:setMood("exit", "activate")
     if not self.is_debug then
       hosp:changeReputation("kicked", self.disease)
       hosp.not_cured = hosp.not_cured + 1
       hosp.not_cured_ty = hosp.not_cured_ty + 1
-      local casebook = hosp.disease_casebook[self.disease.id]
       casebook.turned_away = casebook.turned_away + 1
     end
   elseif reason == "over_priced" then
     self:setMood("sad_money", "activate")
     self:changeAttribute("happiness", -0.5)
+    self.world.ui.adviser:say(_A.warnings.patient_not_paying:format(getLastTreatmentName(self)))
     if not self.is_debug then
-      hosp:changeReputation("over_priced", self.disease)
-      -- The patient refused to pay for diagnostic or an "intermediate" treatment
-      if not self.cured then
+      if self.cured then
+       countCured(self, casebook)
+      else
         hosp.not_cured = hosp.not_cured + 1
         hosp.not_cured_ty = hosp.not_cured_ty + 1
-        self:clearDynamicInfo()
-        self:updateDynamicInfo(_S.dynamic_info.patient.actions.prices_too_high)
       end
+      hosp:changeReputation("over_priced", self.disease)
     end
+    self:clearDynamicInfo()
+    self:updateDynamicInfo(_S.dynamic_info.patient.actions.prices_too_high)
   else
     TheApp.world:gameLog("Error: unknown reason " .. reason .. "!")
   end

@@ -1542,56 +1542,46 @@ end
 !param patient (Patient) The patient that just got treated.
 ]]
 function Hospital:receiveMoneyForTreatment(patient)
+  local function getTransactionReason(patient)
+    if patient.diagnosed then
+      return _S.transactions.cure_colon .. " " .. patient.disease.name
+    else
+      local room_info = patient:getRoom()
+      if not room_info then
+        print("Warning: Trying to receieve money for treated patient who is "..
+                "not in a room")
+        return
+      end
+      room_info = room_info.room_info
+      return _S.transactions.treat_colon .. " " .. room_info.name
+    end
+  end
+
   if not self.world.free_build_mode then
-    local disease_id
     local reason
     if not self.world.free_build_mode then
-      if patient.diagnosed then
-        disease_id = patient.disease.id
-        reason = _S.transactions.cure_colon .. " " .. patient.disease.name
-      else
-        local room_info = patient:getRoom()
-        if not room_info then
-          print("Warning: Trying to receieve money for treated patient who is "..
-              "not in a room")
-          return
-        end
-        room_info = room_info.room_info
-        disease_id = "diag_" .. room_info.id
-        reason = _S.transactions.treat_colon .. " " .. room_info.name
-      end
-      local casebook = self.disease_casebook[disease_id]
-      local amount = self:getTreatmentPrice(disease_id)
+      local casebook_id = patient:getCasebookId()
+      local casebook = self.disease_casebook[casebook_id]
+      local amount = self:getTreatmentPrice(casebook_id)
 
       -- 25% of the payments now go through insurance
       if patient.insurance_company then
-        patient.world:newFloatingDollarSign(patient, amount)
-        casebook.money_earned = casebook.money_earned + amount
         self:addInsuranceMoney(patient.insurance_company, amount)
       else
-        patient:getPriceDistortion(casebook)
-        local price_distortion = patient.price_distorition
-        local is_over_priced = price_distortion > self.over_priced_threshold
-
-        if is_over_priced and math.random(1, 5) == 1 then
-          -- patient thinks it's too expensive, so he/she's not paying and he/she leaves
-          self.world.ui.adviser:say(_A.warnings.patient_not_paying:format(casebook.disease.name))
-          patient:goHome("over_priced")
-        else
-          -- patient is paying normally (but still, he could feel like it's
-          -- under- or over-priced and it could impact happiness and reputation)
-          patient.world:newFloatingDollarSign(patient, amount)
-          casebook.money_earned = casebook.money_earned + amount
-          self:computePriceLevelImpact(patient, casebook, price_distortion)
-          self:receiveMoney(amount, reason)
-        end
+        -- patient is paying normally (but still, he could feel like it's
+        -- under- or over-priced and it could impact happiness and reputation)
+        self:computePriceLevelImpact(patient, casebook)
+        self:receiveMoney(amount, getTransactionReason(patient))
       end
+
+      casebook.money_earned = casebook.money_earned + amount
+      patient.world:newFloatingDollarSign(patient, amount)
     end
   end
 end
 
 --! Function to determine the price for a treatment, modified by reputation and percentage
--- Treatment charge should never be less than the starting price if reputation falls below 500
+--! Treatment charge should never be less than the starting price if reputation falls below 500
 function Hospital:getTreatmentPrice(disease)
   local reputation = self.disease_casebook[disease].reputation or self.reputation
   local percentage = self.disease_casebook[disease].price
@@ -1611,6 +1601,16 @@ end
 function Hospital:receiveMoneyForProduct(patient, amount, reason)
   patient.world:newFloatingDollarSign(patient, amount)
   self:receiveMoney(amount, reason)
+end
+
+--! Pay drug if drug has been purshased to treat a patient
+--!param patient(patient); the patient who's been treated with the drug
+function Hospital:paySupplierForDrug(patient)
+  local drug_amount = patient.hospital.disease_casebook[patient.disease.id].drug_cost or 0
+  if drug_amount ~= 0 then
+    local str = _S.drug_companies[math.random(1, 5)]
+    patient.hospital:spendMoney(drug_amount, _S.transactions.drug_cost .. ": " .. str)
+  end
 end
 
 --[[ Add a transaction to the hospital's transaction log.
@@ -2140,7 +2140,8 @@ end
 --! is paying for
 --!param price_distortion (float): the price distortion
 -- (see Hospital:getPriceDistortion(casebook, room) for more info)
-function Hospital:computePriceLevelImpact(patient, casebook, price_distortion)
+function Hospital:computePriceLevelImpact(patient, casebook)
+  local price_distortion = patient.price_distortion
   patient:changeAttribute("happiness", -(price_distortion / 2))
 
   if price_distortion < self.under_priced_threshold then
