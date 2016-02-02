@@ -263,36 +263,25 @@ function Patient:getPriceDistortion(casebook)
   return price_level - expected_price_level
 end
 
-function Patient:treated() -- If a drug was used we also need to pay for this
-  local hospital = self.hospital
-  local amount = self.hospital.disease_casebook[self.disease.id].drug_cost or 0
-  local over_priced = not self:agreesToPay()
-  if not over_priced then
-    hospital:receiveMoneyForTreatment()
-  end
-  if amount ~= 0 then
-    local str = _S.drug_companies[math.random(1 , 5)]
-    hospital:spendMoney(amount, _S.transactions.drug_cost .. ": " .. str)
-  end
-
-  -- Either the patient is no longer sick, or he/she dies.
+--! Handle attempting to treat this patient
+--!
+--! If the treatment is effective the patient will be sent home, otherwise they
+--! will die. The patient may or may not agree to pay for the treatment
+--! depending on whether they consider the price reasonable.
+function Patient:treatDisease()
   if self:isTreatmentEffective() then
-    self.hospital:msgCured()
     self:cure()
-    self.treatment_history[#self.treatment_history + 1] = _S.dynamic_info.patient.actions.cured
-    if over_priced then
-      self:goHome("over_priced")
-    else
+    if self:agreesToPay() then
+      self.hospital:receiveMoneyForTreatment(patient)
       self:goHome("cured")
+    else
+      self:goHome("over_priced")
     end
-    self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
   else
     self:die()
   end
-  self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
 
-  hospital:updatePercentages()
-
+  self.hospital:paySupplierForDrug(patient)
   if self.is_emergency then
     local killed = hospital.emergency.killed_emergency_patients
     local cured = hospital.emergency.cured_emergency_patients
@@ -584,6 +573,8 @@ function Patient:goHome(reason)
       self.world.ui.adviser:say(_A.information.first_cure)
     end
     self:countCured()
+    self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
+    self.hospital:msgCured()
   elseif reason == "kicked" then
     self:setMood("exit", "activate")
     if not self.is_debug then
