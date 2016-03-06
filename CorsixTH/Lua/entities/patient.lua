@@ -276,17 +276,9 @@ function Patient:treated() -- If a drug was used we also need to pay for this
   end
 
   -- Either the patient is no longer sick, or he/she dies.
-  local cure_chance = hospital.disease_casebook[self.disease.id].cure_effectiveness
-  cure_chance = cure_chance * self.diagnosis_progress
-  if self.die_anims and math.random(1, 100) > cure_chance then
-    self:die()
-  elseif self.die_anims and math.random(1, 100) > (self.diagnosis_progress * 100) then
-    self:die()
-  else
+  if self:isTreatmentEffective() then
     self.hospital:msgCured()
-    self.cured = true
-    self.infected = false
-    self.attributes["health"] = 1
+    self:cure()
     self.treatment_history[#self.treatment_history + 1] = _S.dynamic_info.patient.actions.cured
     if over_priced then
       self:goHome("over_priced")
@@ -294,7 +286,10 @@ function Patient:treated() -- If a drug was used we also need to pay for this
       self:goHome("cured")
     end
     self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
+  else
+    self:die()
   end
+  self:updateDynamicInfo(_S.dynamic_info.patient.actions.cured)
 
   hospital:updatePercentages()
 
@@ -318,6 +313,23 @@ function Patient:agreesToPay()
   local is_over_priced = price_distortion > self.hospital.over_priced_threshold
 
   return not (is_over_priced and math.random(1, 5) == 1)
+end
+
+--! Either the patient is cured, or he/she dies.
+--!return (boolean) True if cured, false if died.
+function Patient:isTreatmentEffective()
+  local cure_chance = self.hospital.disease_casebook[self.disease.id].cure_effectiveness
+  cure_chance = cure_chance * self.diagnosis_progress
+
+  local die = self.die_anims and math.random(1, 100) > cure_chance
+  return not die
+end
+
+--! Change patient internal state to "cured".
+function Patient:cure()
+  self.cured = true
+  self.infected = false
+  self.attributes["health"] = 1
 end
 
 function Patient:die()
