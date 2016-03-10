@@ -214,6 +214,21 @@ function Patient:setHospital(hospital)
   end
 end
 
+function Patient:getTreatmentDiseaseId()
+  if diagnosed then
+    return disease_id
+  else
+    local room_info = patient:getRoom()
+    if not room_info then
+      print("Warning: Trying to receive money for treated patient who is "..
+          "not in a room")
+      return nil
+    end
+    room_info = room_info.room_info
+    return "diag_" .. room_info.id
+  end
+end
+
 function Patient:treated() -- If a drug was used we also need to pay for this
   local hospital = self.hospital
   local amount = self.hospital.disease_casebook[self.disease.id].drug_cost or 0
