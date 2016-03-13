@@ -283,14 +283,7 @@ function Patient:treatDisease()
 
   self.hospital:paySupplierForDrug(patient)
   if self.is_emergency then
-    local killed = hospital.emergency.killed_emergency_patients
-    local cured = hospital.emergency.cured_emergency_patients
-    if killed + cured >= hospital.emergency.victims then
-      local window = hospital.world.ui:getWindow(UIWatch)
-      if window then
-        window:onCountdownEnd()
-      end
-    end
+    self.hospital.checkEmergencyOver()
   end
 end
 
