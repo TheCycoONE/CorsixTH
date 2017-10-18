@@ -43,6 +43,7 @@ confirmation.restart_level = "¿Seguro que quieres reiniciar el nivel?"
 -- TODO adviser.multiplayer.objective_failed
 
 fax.emergency.num_disease = "Hay %d personas con %s y necesitan ser atendidas inmediatamente."
+fax.emergency_result.earned_money = "De una prima máxima de %d, has ganado %d."
 
 tooltip.handyman_window.close = "Cerrar ventana"
 tooltip.machine_window.close = "Cerrar ventana"
