@@ -466,9 +466,9 @@ function UI:removeKeyHandler(keys, window)
   -- Check to see if "keys" key exist in the hotkeys table.
   if self.app.hotkeys[keys] ~= nil then
       if type(self.app.hotkeys[keys]) == "table" then
-        temp_keys = {table.unpack(self.app.hotkeys[keys])}
+        temp_keys = shallow_clone(self.app.hotkeys[keys])
       elseif type(self.app.hotkeys[keys]) == "string" then
-        temp_keys = {table.unpack({self.app.hotkeys[keys]})}
+        temp_keys = shallow_clone({self.app.hotkeys[keys]})
       end
   else
     if type(keys) == "string" then
