@@ -20,6 +20,7 @@
           https://www.gog.com/game/theme_hospital</li>
     </ul>
   </description>
+  <launchable type="desktop-id">com.corsixth.corsixth.desktop</launchable>
   <provides>
     <binary>corsix-th</binary>
   </provides>
