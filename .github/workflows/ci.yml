@@ -29,7 +29,7 @@ jobs:
       run: apt-get install libssl-dev doxygen sshpass libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libsdl2-dev libsdl2-mixer-dev libfreetype6-dev libwxgtk3.0-gtk3-dev clang-tidy-8
       
     - name: Install LuaRocks dependencies
-      run:
+      run: |
         luarocks install luasec OPENSSL_DIR=/usr OPENSSL_LIBDIR=/usr/lib/x86_64-linux-gnu/
         # Required for LDocGen
         luarocks install lpeg
@@ -52,7 +52,7 @@ jobs:
     - name: Pre-build tests
       working-directory: ${GITHUB_WORKSPACE}
       shell: bash
-      run:
+      run: |
         # Check if there are trailing whitespaces.
         scripts/check_trailing_whitespaces.py $TRAVIS_BUILD_DIR
         # Check for incorrectly encoded language files.
