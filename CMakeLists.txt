@@ -17,6 +17,7 @@
 #   - BUILD_ANIMVIEWER : Generate AnimViewer build files (no)
 
 cmake_minimum_required(VERSION 3.5)
+cmake_policy(SET CMP0066 NEW)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
