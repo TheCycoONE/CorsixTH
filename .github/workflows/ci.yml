@@ -47,7 +47,7 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLUA_PROGRAM_PATH=${{runner.workspace}}/.lua/bin/lua -DLUA_INCLUDE_DIR=${{runner.workspace}}/.lua/include -DLUA_LIBRARY=${{runner.workspace}/.lua/liblua.a -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLUA_PROGRAM_PATH=${{runner.workspace}}/.lua/bin/lua -DLUA_INCLUDE_DIR=${{runner.workspace}}/.lua/include -DLUA_LIBRARY=${{runner.workspace}}/.lua/liblua.a -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
 
     - name: Pre-build tests
       working-directory: ${GITHUB_WORKSPACE}
