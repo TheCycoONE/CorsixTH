@@ -26,7 +26,7 @@ jobs:
         luaRocksVersion: 3.3.1
       
     - name: Install Distro dependencies
-      run: apt-get install libssl-dev doxygen sshpass libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libsdl2-dev libsdl2-mixer-dev libfreetype6-dev libwxgtk3.0-gtk3-dev clang-tidy-8
+      run: sudo apt-get install libssl-dev doxygen sshpass libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libsdl2-dev libsdl2-mixer-dev libfreetype6-dev libwxgtk3.0-gtk3-dev clang-tidy-8
       
     - name: Install LuaRocks dependencies
       run: |
