@@ -1,0 +1,90 @@
+name: CI
+
+on: [push]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: leafo/gh-actions-lua@v8.0.0
+      with:
+        # The version of Lua to install, must be available on https://www.lua.org/ftp/ or http://luajit.org/download.html
+        luaVersion: 5.4  
+    - uses: leafo/gh-actions-luarocks@v4.0.0
+      with:
+        # The version of LuaRocks to install, must be available on https://luarocks.github.io/luarocks/releases/
+        luaRocksVersion: 3.3.1
+      
+    - name: Install Distro dependencies
+      run: apt-get install libssl-dev doxygen sshpass libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libsdl2-dev libsdl2-mixer-dev libfreetype6-dev libwxgtk3.0-gtk3-dev clang-tidy-8
+      
+    - name: Install LuaRocks dependencies
+      run:
+        luarocks install luasec OPENSSL_DIR=/usr OPENSSL_LIBDIR=/usr/lib/x86_64-linux-gnu/
+        # Required for LDocGen
+        luarocks install lpeg
+        luarocks install luafilesystem
+        luarocks install luasocket
+        luarocks install luacheck 0.19.1
+        # Required for lua unit tests
+        luarocks install busted
+      
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{runner.workspace}}/build
+
+    - name: Configure CMake
+      # Use a bash shell so we can use the same syntax for environment variable
+      # access regardless of the host operating system
+      shell: bash
+      working-directory: ${{runner.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
+
+    - name: Pre-build tests
+      working-directory: ${GITHUB_WORKSPACE}
+      shell: bash
+      run:
+        # Check if there are trailing whitespaces.
+        scripts/check_trailing_whitespaces.py $TRAVIS_BUILD_DIR
+        # Check for incorrectly encoded language files.
+        scripts/check_language_files_not_BOM.py $TRAVIS_BUILD_DIR/CorsixTH/Lua/languages
+        # Check if there are lua classes with invalid/improper declarations.
+        scripts/check_lua_classes.py
+        # Check cpp format
+        clang-format -i CorsixTH/Src/*{.cpp,.h} AnimView/*{.cpp,.h} libs/rnc/*{.cpp,.h} CorsixTH/SrcUnshared/main.cpp
+        # clang-tidy check. The valist test is buggy in this environment (https://bugs.llvm.org/show_bug.cgi?id=41311)
+        clang-tidy-8 -p $TRAVIS_BUILD_DIR/fresh --warnings-as-errors=\*,-clang-analyzer-valist.Uninitialized CorsixTH/Src/*{.cpp,.c} libs/rnc/*.cpp CorsixTH/SrcUnshared/main.cpp
+        git diff --exit-code
+        find . -path ${GITHUB_WORKSPACE}/CorsixTH/Lua/languages -prune -o -name '*.lua' -print0 | xargs -0 luac -p --
+        luacheck -q .
+
+    - name: Build
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      run: cmake --build . --config $BUILD_TYPE --debug-output
+
+    - name: CPP test
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ctest -C $BUILD_TYPE
+      
+    - name: Lua test
+      working-directory: ${GITHUB_WORKPLACE}/CorsixTH/Luatest
+      shell: bash
+      run: busted
+      
+    - name: Build documentation
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      run: make doc
