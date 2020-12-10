@@ -24,7 +24,7 @@ def has_trailing_whitespace(path):
                     m = TRAILING_SEQUENCE.search(line)
                     if m:
                         return True
-        except BaseException e:
+        except BaseException as e:
             print("Error while checking {}: {}".format(path, e.message)
             sys.exit(1)
 
