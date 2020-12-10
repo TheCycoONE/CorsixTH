@@ -8,11 +8,7 @@ env:
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - uses: actions/checkout@v2
@@ -60,7 +56,7 @@ jobs:
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLUA_PROGRAM_PATH=${GITHUB_WORKSPACE}/.lua/bin/lua -DLUA_INCLUDE_DIR=${GITHUB_WORKSPACE}/.lua/include -DLUA_LIBRARY=${GITHUB_WORKSPACE}/.lua/liblua.a -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
 
     - name: Pre-build tests
-      working-directory: ${GITHUB_WORKSPACE}
+      working-directory: ${{runner.workspace}}
       shell: bash
       run: |
         # Check if there are trailing whitespaces.
@@ -90,7 +86,7 @@ jobs:
       run: ctest -C $BUILD_TYPE
       
     - name: Lua test
-      working-directory: ${GITHUB_WORKPLACE}/CorsixTH/Luatest
+      working-directory: ${{runner.workspace}}/CorsixTH/Luatest
       shell: bash
       run: busted
       
