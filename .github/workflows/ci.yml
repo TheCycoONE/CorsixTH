@@ -55,23 +55,16 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLUA_PROGRAM_PATH=${GITHUB_WORKSPACE}/.lua/bin/lua -DLUA_INCLUDE_DIR=${GITHUB_WORKSPACE}/.lua/include -DLUA_LIBRARY=${GITHUB_WORKSPACE}/.lua/liblua.a -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
 
-    - name: Information
-      working-directory: ${{runner.workspace}}
-      run: |
-        pwd
-        echo ${GITHUB_WORKSPACE}
-        ls -la
-
     - name: Pre-build tests
-      working-directory: ${{runner.workspace}}
+      working-directory: ${{runner.workspace}}/CorsixTH
       shell: bash
       run: |
         # Check if there are trailing whitespaces.
-        ${GITHUB_WORKSPACE}/scripts/check_trailing_whitespaces.py $TRAVIS_BUILD_DIR
+        scripts/check_trailing_whitespaces.py $TRAVIS_BUILD_DIR
         # Check for incorrectly encoded language files.
-        ${GITHUB_WORKSPACE}/scripts/check_language_files_not_BOM.py $TRAVIS_BUILD_DIR/CorsixTH/Lua/languages
+        scripts/check_language_files_not_BOM.py $TRAVIS_BUILD_DIR/CorsixTH/Lua/languages
         # Check if there are lua classes with invalid/improper declarations.
-        ${GITHUB_WORSKPACE}/scripts/check_lua_classes.py
+        scripts/check_lua_classes.py
         # Check cpp format
         clang-format -i CorsixTH/Src/*{.cpp,.h} AnimView/*{.cpp,.h} libs/rnc/*{.cpp,.h} CorsixTH/SrcUnshared/main.cpp
         # clang-tidy check. The valist test is buggy in this environment (https://bugs.llvm.org/show_bug.cgi?id=41311)
