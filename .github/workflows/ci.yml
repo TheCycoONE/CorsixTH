@@ -60,15 +60,15 @@ jobs:
       shell: bash
       run: |
         # Check if there are trailing whitespaces.
-        scripts/check_trailing_whitespaces.py $TRAVIS_BUILD_DIR
+        scripts/check_trailing_whitespaces.py ${GITHUB_WORKSPACE}
         # Check for incorrectly encoded language files.
-        scripts/check_language_files_not_BOM.py $TRAVIS_BUILD_DIR/CorsixTH/Lua/languages
+        scripts/check_language_files_not_BOM.py ${GITHUB_WORKSPACE}/CorsixTH/Lua/languages
         # Check if there are lua classes with invalid/improper declarations.
         scripts/check_lua_classes.py
         # Check cpp format
         clang-format -i CorsixTH/Src/*{.cpp,.h} AnimView/*{.cpp,.h} libs/rnc/*{.cpp,.h} CorsixTH/SrcUnshared/main.cpp
         # clang-tidy check. The valist test is buggy in this environment (https://bugs.llvm.org/show_bug.cgi?id=41311)
-        clang-tidy-8 -p $TRAVIS_BUILD_DIR/fresh --warnings-as-errors=\*,-clang-analyzer-valist.Uninitialized CorsixTH/Src/*{.cpp,.c} libs/rnc/*.cpp CorsixTH/SrcUnshared/main.cpp
+        clang-tidy-8 -p ../build --warnings-as-errors=\*,-clang-analyzer-valist.Uninitialized CorsixTH/Src/*{.cpp,.c} libs/rnc/*.cpp CorsixTH/SrcUnshared/main.cpp
         git diff --exit-code
         find . -path ${GITHUB_WORKSPACE}/CorsixTH/Lua/languages -prune -o -name '*.lua' -print0 | xargs -0 luac -p --
         luacheck -q .
