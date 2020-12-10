@@ -18,11 +18,15 @@ TRAILING_SEQUENCE = re.compile(r'[ \t][\r\n]')
 def has_trailing_whitespace(path):
     """ Returns whether |path| has trailing whitespace. """
     if os.path.isfile(path):
-        with open(path, 'r') as handle:
-            for line in handle:
-                m = TRAILING_SEQUENCE.search(line)
-                if m:
-                    return True
+        try:
+            with open(path, 'r') as handle:
+                for line in handle:
+                    m = TRAILING_SEQUENCE.search(line)
+                    if m:
+                        return True
+        except BaseException e:
+            print("Error while checking {}: {}".format(path, e.message)
+            sys.exit(1)
 
     return False
 
