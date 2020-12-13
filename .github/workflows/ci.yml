@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-    - uses: actions/checkout@v2
-      
     - uses: leafo/gh-actions-lua@v8.0.0
       with:
         # The version of Lua to install, must be available on https://www.lua.org/ftp/ or http://luajit.org/download.html
@@ -21,6 +19,7 @@ jobs:
       with:
         # The version of LuaRocks to install, must be available on https://luarocks.github.io/luarocks/releases/
         luaRocksVersion: 3.3.1
+    - uses: actions/checkout@v2
       
     - name: Install Distro dependencies
       run: sudo apt-get install libssl-dev doxygen sshpass libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libsdl2-dev libsdl2-mixer-dev libfreetype6-dev libwxgtk3.0-gtk3-dev clang-tidy-8
@@ -53,7 +52,7 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLUA_PROGRAM_PATH=${GITHUB_WORKSPACE}/.lua/bin/lua -DLUA_INCLUDE_DIR=${GITHUB_WORKSPACE}/.lua/include -DLUA_LIBRARY=${GITHUB_WORKSPACE}/.lua/liblua.a -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLUA_PROGRAM_PATH=../.lua/bin/lua -DLUA_INCLUDE_DIR=../.lua/include -DLUA_LIBRARY=../.lua/liblua.a -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
 
     - name: Pre-build tests
       working-directory: ${{runner.workspace}}/CorsixTH
