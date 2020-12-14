@@ -27,14 +27,14 @@ jobs:
     
     - name: Install LuaRocks dependencies
       run: |
-        luarocks install luasec OPENSSL_DIR=/usr OPENSSL_LIBDIR=/usr/lib/x86_64-linux-gnu/
+        sudo luarocks install luasec OPENSSL_DIR=/usr OPENSSL_LIBDIR=/usr/lib/x86_64-linux-gnu/
         # Required for LDocGen
-        luarocks install lpeg
-        luarocks install luafilesystem
-        luarocks install luasocket
-        luarocks install luacheck 0.19.1
+        sudo luarocks install lpeg
+        sudo luarocks install luafilesystem
+        sudo luarocks install luasocket
+        sudo luarocks install luacheck 0.19.1
         # Required for lua unit tests
-        luarocks install busted
+        sudo luarocks install busted
       
     - name: Create Build Environment
       run: cmake -E make_directory ${{runner.workspace}}/build
