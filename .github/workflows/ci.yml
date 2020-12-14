@@ -45,6 +45,11 @@ jobs:
       shell: bash
       working-directory: ${{runner.workspace}}/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DENABLE_UNIT_TESTS=ON -DWITH_AUDIO=ON -DWITH_MOVIES=ON -DWITH_LUAJIT=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --debug-output
+    
+    - name: Pre-build tests
+      working-directory: ${{runner.workspace}}/CorsixTH
+      shell: bash
+      run: ls ../build
 
     - name: Pre-build tests
       working-directory: ${{runner.workspace}}/CorsixTH
