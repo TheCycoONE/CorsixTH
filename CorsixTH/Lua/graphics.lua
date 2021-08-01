@@ -60,6 +60,14 @@ local cursors_palette = {
   [36] = "bank01v.pal",
   [44] = "stat01v.pal",
 }
+local cursors_hotx = {
+  [10] = 8,
+  [11] = 8,
+}
+local cursors_hoty = {
+  [10] = 8,
+  [11] = 8,
+}
 
 function Graphics:Graphics(app)
   self.app = app
@@ -161,9 +169,14 @@ function Graphics:loadMainCursor(id)
   if id > 20 then -- SPointer cursors
     local cursor_palette = self:loadPalette("QData", cursors_palette[id])
     cursor_palette:setEntry(255, 0xFF, 0x00, 0xFF) -- Make index 255 transparent
-    return self:loadCursor(self:loadSpriteTable("QData", "SPointer", false, cursor_palette), id - 20)
+    return self:loadCursor(
+        self:loadSpriteTable("QData", "SPointer", false, cursor_palette),
+        id - 20,
+        cursors_hotx[id],
+        cursors_hoty[id])
   else
-    return self:loadCursor(self:loadSpriteTable("Data", "MPointer"), id)
+    return self:loadCursor(self:loadSpriteTable("Data", "MPointer"), id,
+                           cursors_hotx[id], cursors_hoty[id])
   end
 end
 
