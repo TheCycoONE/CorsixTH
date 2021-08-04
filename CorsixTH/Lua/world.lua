@@ -2686,6 +2686,11 @@ function World:afterLoad(old, new)
       obj:afterLoad(old, new)
     end
   end
+  -- update entity map if it exists, newly created one for saves older than 88
+  -- will be up to date
+  if self.entity_map then
+    self.entity_map:afterLoad(old, new)
+  end
 
   if old < 80 then
     self:determineWinningConditions()
@@ -2705,6 +2710,7 @@ function World:afterLoad(old, new)
       end
     end
   end
+
   if old < 108 then
     self.room_build_callbacks = nil
   end
@@ -2872,4 +2878,13 @@ function World:setCampaignData(campaign_data)
     self[key] = value
   end
   self:getLocalPlayerHospital():setCampaignData(campaign_data.hospital)
+end
+
+--! Determine if any rats are near to the given screen coordinates
+--! relative to the map origin
+--!param x (number) x-coordinate on the screen
+--!param y (number) y-coordinate on the screen
+function World:isNearRat(x, y)
+  local tile_x, tile_y = self.map:ScreenToWorld(x, y)
+  return #self.entity_map:getRatsAtCoordinate(math.floor(tile_x), math.floor(tile_y)) ~= 0
 end
