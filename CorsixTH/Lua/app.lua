@@ -160,7 +160,7 @@ function App:init()
     modes[#modes + 1] = "direct zoom"
   end
   self.modes = modes
-  self.video = assert(TH.surface(self.config.width, self.config.height, unpack(modes)))
+  self.video = assert(TH.surface(self.config.width, self.config.height, self.config.ui_scale, unpack(modes)))
   self.video:setBlueFilterActive(false)
   SDL.wm.setIconWin32()
 
