@@ -458,3 +458,11 @@ function shallow_clone(tbl)
   setmetatable(target, meta)
   return target
 end
+
+function pause_gc_and_use_week_keys(fn, ...)
+  collectgarbage()
+  collectgarbage()
+  collectgarbage("stop")
+  fn(...)
+  collectgarbage("restart")
+end
