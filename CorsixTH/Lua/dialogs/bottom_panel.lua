@@ -27,6 +27,9 @@ local UIBottomPanel = _G["UIBottomPanel"]
 local FAX_DOOR_FULLY_OPEN = 0
 local FAX_DOOR_FULLY_SHUT = 22
 
+local FAX_DOOR_MIN_TICKS_BETWEEN_CREATE = 9
+local FAX_DOOR_TICKS_TO_HOLD_OPEN = 50
+
 function UIBottomPanel:UIBottomPanel(ui)
   self:Window()
 
@@ -41,7 +44,7 @@ function UIBottomPanel:UIBottomPanel(ui)
 
   self.fax_door = {
     closed_amount = FAX_DOOR_FULLY_SHUT,
-    next_action_delay = 0
+    ticks_since_last_create = FAX_DOOR_TICKS_TO_HOLD_OPEN + 1 -- can close or open immediately
   }
 
   -- Visible fax panels on the left side of the bottom panel
@@ -630,16 +633,19 @@ function UIBottomPanel:onTick()
 end
 
 function UIBottomPanel:_faxDoorTick()
-  if self.fax_door.next_action_delay > 0 then
-    self.fax_door.next_action_delay = self.fax_door.next_action_delay - 1
-    return
-  end
+  self.fax_door.ticks_since_last_create = self.fax_door.ticks_since_last_create + 1
 
   local msg_to_show = self:_findMessageToShow()
 
-  if msg_to_show and self.fax_door.closed_amount == FAX_DOOR_FULLY_OPEN then
+  if msg_to_show and
+      self.fax_door.closed_amount == FAX_DOOR_FULLY_OPEN and
+      self.fax_door.ticks_since_last_create > FAX_DOOR_MIN_TICKS_BETWEEN_CREATE then
     self:createMessageWindow()
-    self.fax_door.next_action_delay = 9
+    self.fax_door.ticks_since_last_create = 0
+    return
+  end
+
+  if self.fax_door.ticks_since_last_create <= FAX_DOOR_TICKS_TO_HOLD_OPEN then
     return
   end
 
@@ -1002,7 +1008,7 @@ function UIBottomPanel:afterLoad(old, new)
     end
     self.fax_door = {
       closed_amount = self.factory_counter,
-      next_action_delay = 0
+      ticks_since_last_create = FAX_DOOR_TICKS_TO_HOLD_OPEN + 1
     }
     self.factory_counter = nil
     self.factory_direction = nil
