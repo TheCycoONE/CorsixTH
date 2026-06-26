@@ -25,8 +25,8 @@ SOFTWARE.
 
 #include "config.h"
 
-#include <SDL_rect.h>
-#include <SDL_render.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_render.h>
 
 #include <array>
 #include <atomic>
@@ -38,7 +38,7 @@ SOFTWARE.
 #include <thread>
 
 #ifdef CORSIX_TH_USE_FFMPEG
-#include <SDL_mixer.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 extern "C" {
 #ifndef INT64_C
@@ -182,7 +182,7 @@ class movie_picture_buffer {
   //! \param dstrect The rectangle on the renderer to draw to
   //!
   //! \remark Must be run on the program's graphics thread
-  void draw(SDL_Renderer* pRenderer, const SDL_Rect& dstrect);
+  void draw(SDL_Renderer* pRenderer, const SDL_FRect& dstrect);
 
   //! Get the next presentation time stamp
   double get_next_pts();
@@ -361,7 +361,7 @@ class movie_player {
   //! \param destination_rect The location and dimensions in the renderer on
   //! which to draw the movie
   //! \returns The current presentation time stamp of the movie in milliseconds
-  double refresh(const SDL_Rect& destination_rect);
+  double refresh(const SDL_FRect& destination_rect);
 
   //! Deallocate the picture buffer and free any resources associated with it.
   //!

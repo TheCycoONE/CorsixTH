@@ -22,7 +22,7 @@ SOFTWARE.
 
 #include "config.h"
 
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 
 #ifdef WITH_TRACY
 #include <tracy/Tracy.hpp>
@@ -134,10 +134,10 @@ int l_movie_refresh(lua_State* L) {
 
   movie_player* pMovie = luaT_testuserdata<movie_player>(L);
   double pts =
-      pMovie->refresh(SDL_Rect{static_cast<int>(luaL_checkinteger(L, 2)),
-                               static_cast<int>(luaL_checkinteger(L, 3)),
-                               static_cast<int>(luaL_checkinteger(L, 4)),
-                               static_cast<int>(luaL_checkinteger(L, 5))});
+      pMovie->refresh(SDL_FRect{static_cast<float>(luaL_checknumber(L, 2)),
+                               static_cast<float>(luaL_checknumber(L, 3)),
+                               static_cast<float>(luaL_checknumber(L, 4)),
+                               static_cast<float>(luaL_checknumber(L, 5))});
 
   lua_pushnumber(L, pts);
   return 1;

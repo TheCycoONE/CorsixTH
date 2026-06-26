@@ -38,13 +38,13 @@ extern "C" {
 #include <libswresample/version.h>
 #include <libswscale/swscale.h>
 }
-#include <SDL_error.h>
-#include <SDL_events.h>
-#include <SDL_mixer.h>
-#include <SDL_pixels.h>
-#include <SDL_rect.h>
-#include <SDL_render.h>
-#include <SDL_timer.h>
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_timer.h>
 
 #include <cerrno>
 #include <chrono>
@@ -173,15 +173,14 @@ bool movie_picture_buffer::advance() {
 }
 
 void movie_picture_buffer::draw(SDL_Renderer* pRenderer,
-                                const SDL_Rect& dstrect) {
+                                const SDL_FRect& dstrect) {
   if (!empty()) {
     auto& cur_pic = picture_queue[read_index];
 
     std::scoped_lock pictureLock(cur_pic.mutex);
     if (cur_pic.buffer) {
       SDL_UpdateTexture(texture, nullptr, cur_pic.buffer, cur_pic.width * 3);
-      int iError = SDL_RenderCopy(pRenderer, texture, nullptr, &dstrect);
-      if (iError < 0) {
+      if (!SDL_RenderTexture(pRenderer, texture, nullptr, &dstrect)) {
         std::cerr << "Error displaying movie frame: " << SDL_GetError() << "\n";
       }
     }
@@ -572,8 +571,8 @@ const char* movie_player::get_last_error() const { return last_error.c_str(); }
 
 void movie_player::clear_last_error() { last_error.clear(); }
 
-double movie_player::refresh(const SDL_Rect& destination_rect) {
-  SDL_Rect dest_rect = SDL_Rect{destination_rect.x, destination_rect.y,
+double movie_player::refresh(const SDL_FRect& destination_rect) {
+  SDL_FRect dest_rect = SDL_FRect{destination_rect.x, destination_rect.y,
                                 destination_rect.w, destination_rect.h};
 
   double dCurTime = (paused.load() ? pause_start_time : SDL_GetTicks()) -

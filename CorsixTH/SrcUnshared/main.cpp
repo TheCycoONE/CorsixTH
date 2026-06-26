@@ -24,8 +24,9 @@ SOFTWARE.
 
 #include "config.h"
 
-#include <SDL.h>
-#include <SDL_mixer.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include <cstdio>
 #include <memory>
@@ -165,9 +166,7 @@ int main(int argc, char** argv) {
     // Destroy the lua_State before SDL so that any SDL resource owned by
     // Lua can be freed first.
     L.reset(nullptr);
-    while (Mix_QuerySpec(nullptr, nullptr, nullptr)) {
-      Mix_CloseAudio();
-    }
+    MIX_Quit();
     SDL_Quit();
 
     if (bRun) {
