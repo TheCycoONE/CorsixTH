@@ -420,7 +420,8 @@ void mainloop(lua_State* L) {
           push_app_dispatch(L, last_dispatch);
           lua_pushinteger(L, e.window.data1);
           lua_pushinteger(L, e.window.data2);
-          nargs = 3;
+          lua_pushnumber(L, SDL_GetWindowDisplayScale(target->get_window()));
+          nargs = 4;
           break;
         case SDL_USEREVENT_MUSIC_OVER:
           last_dispatch = dispatch_music_over;

@@ -430,14 +430,29 @@ render_target::render_target(const render_target_creation_params& params)
   SDL_PropertiesID winProps = SDL_CreateProperties();
   SDL_SetStringProperty(winProps, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
                         "CorsixTH");
-  SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
-  SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
+  SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER,
+                        params.width);
+  SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER,
+                        params.height);
+  SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_HIDDEN_BOOLEAN, true);
+  SDL_SetBooleanProperty(
+      winProps, SDL_PROP_WINDOW_CREATE_HIGH_PIXEL_DENSITY_BOOLEAN, true);
+  SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_FULLSCREEN_BOOLEAN,
+                         params.fullscreen);
   SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER,
                         SDL_WINDOW_RESIZABLE);
   window = SDL_CreateWindowWithProperties(winProps);
   SDL_DestroyProperties(winProps);
   if (!window) {
     throw std::runtime_error(SDL_GetError());
+  }
+
+  float scale = SDL_GetWindowPixelDensity(window);
+  if (scale != 1.0f) {
+    int win_width = static_cast<int>(static_cast<float>(params.width) / scale);
+    int win_height =
+        static_cast<int>(static_cast<float>(params.height) / scale);
+    SDL_SetWindowSize(window, win_width, win_height);
   }
 
   SDL_PropertiesID renderProps = SDL_CreateProperties();
@@ -462,11 +477,15 @@ render_target::render_target(const render_target_creation_params& params)
   supports_target_textures = !!testTexture;
   SDL_DestroyTexture(testTexture);
 
-  SDL_SetWindowMinimumSize(window, params.min_width, params.min_height);
-  SDL_SetRenderLogicalPresentation(renderer, width, height,
+  int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
+  int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
+  SDL_SetWindowMinimumSize(window, mw, mh);
+
+  SDL_SetRenderLogicalPresentation(renderer, params.width, params.height,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-  update(params);
+  SDL_ShowWindow(window);
+  SDL_SyncWindow(window);
 
   // Workaround for https://github.com/libsdl-org/SDL/issues/13920 on MacOS
   SDL_Event evt;
@@ -491,6 +510,12 @@ render_target::~render_target() {
 }
 
 bool render_target::update(const render_target_creation_params& params) {
+  float scale = SDL_GetWindowPixelDensity(window);
+  int pw = static_cast<int>(static_cast<float>(params.width) / scale);
+  int ph = static_cast<int>(static_cast<float>(params.height) / scale);
+  int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
+  int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
+
   bool bUpdateSize = (width != params.width) || (height != params.height);
   width = params.width;
   height = params.height;
@@ -502,22 +527,18 @@ bool render_target::update(const render_target_creation_params& params) {
   }
 
   if (bUpdateSize || bIsFullscreen != params.fullscreen) {
-    SDL_SetWindowSize(window, width, height);
-  }
-
-  if (bUpdateSize) {
-    SDL_SetRenderLogicalPresentation(renderer, width, height,
-                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetWindowSize(window, pw, ph);
   }
 
   int old_min_width;
   int old_min_height;
   SDL_GetWindowMinimumSize(window, &old_min_width, &old_min_height);
-  if (old_min_width != params.min_width ||
-      old_min_height != params.min_height) {
-    SDL_SetWindowMinimumSize(window, params.min_width, params.min_height);
+  if (old_min_width != mw || old_min_height != mh) {
+    SDL_SetWindowMinimumSize(window, mw, mh);
   }
 
+  SDL_SetRenderLogicalPresentation(renderer, params.width, params.height,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
   return true;
 }
 
@@ -661,7 +682,7 @@ void render_target::push_clip_rect(const clip_rect* pRect) {
   if (!clip_rects.empty()) {
     previous_clip = &clip_rects.top();
   }
-  clip_rects.push(SDL_Rect());
+  clip_rects.emplace();
   SDL_Rect& clip = clip_rects.top();
   getEnclosingScaleRect(pRect, draw_scale(), &clip);
   if (previous_clip) {
