@@ -371,8 +371,6 @@ render_target::scoped_target_texture::scoped_target_texture(
   }
 
   // Clear the new texture to transparent/black.
-  SDL_SetRenderLogicalPresentation(target->renderer, rect.w, rect.h,
-                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
   SDL_SetRenderDrawColor(target->renderer, 0, 0, 0, SDL_ALPHA_TRANSPARENT);
   SDL_RenderClear(target->renderer);
   target->current_target = this;
@@ -399,24 +397,22 @@ render_target::scoped_target_texture::~scoped_target_texture() {
     std::fprintf(stderr, "scoped_target_texture destructor error: %s",
                  SDL_GetError());
   }
-  SDL_SetRenderLogicalPresentation(
-      target->renderer,
-      previous_target ? previous_target->rect.w : target->width,
-      previous_target ? previous_target->rect.h : target->height,
-      SDL_LOGICAL_PRESENTATION_LETTERBOX);
   SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
   target->current_target = previous_target;
+
   if (scale) {
     // If the target texture is already scaled, skip the global scale factor
     // by drawing directly.
 
-    if (!SDL_RenderTexture(target->renderer, texture, nullptr, &rect)) {
+    SDL_FRect src{0.0, 0.0, rect.w, rect.h};
+    if (!SDL_RenderTexture(target->renderer, texture, &src, &rect)) {
       std::fprintf(stderr,
                    "scoped_target_texture destructor failed to render: %s",
                    SDL_GetError());
     }
   } else {
-    target->draw(texture, nullptr, &rect, 0);
+    SDL_Rect src{0, 0, static_cast<int>(rect.w), static_cast<int>(rect.h)};
+    target->draw(texture, &src, &rect, 0);
   }
   target->intermediate_textures.push_back(texture);
 }
@@ -481,8 +477,10 @@ render_target::render_target(const render_target_creation_params& params)
   int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
   SDL_SetWindowMinimumSize(window, mw, mh);
 
-  SDL_SetRenderLogicalPresentation(renderer, params.width, params.height,
-                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  SDL_RendererLogicalPresentation lp = params.fullscreen
+                                           ? SDL_LOGICAL_PRESENTATION_LETTERBOX
+                                           : SDL_LOGICAL_PRESENTATION_DISABLED;
+  SDL_SetRenderLogicalPresentation(renderer, params.width, params.height, lp);
 
   SDL_ShowWindow(window);
   SDL_SyncWindow(window);
@@ -537,8 +535,10 @@ bool render_target::update(const render_target_creation_params& params) {
     SDL_SetWindowMinimumSize(window, mw, mh);
   }
 
-  SDL_SetRenderLogicalPresentation(renderer, params.width, params.height,
-                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  SDL_RendererLogicalPresentation lp = params.fullscreen
+                                           ? SDL_LOGICAL_PRESENTATION_LETTERBOX
+                                           : SDL_LOGICAL_PRESENTATION_DISABLED;
+  SDL_SetRenderLogicalPresentation(renderer, params.width, params.height, lp);
   return true;
 }
 
