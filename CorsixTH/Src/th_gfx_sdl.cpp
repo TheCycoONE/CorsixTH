@@ -444,12 +444,10 @@ render_target::render_target(const render_target_creation_params& params)
   }
 
   float scale = SDL_GetWindowPixelDensity(window);
-  if (scale != 1.0f) {
-    int win_width = static_cast<int>(static_cast<float>(params.width) / scale);
-    int win_height =
-        static_cast<int>(static_cast<float>(params.height) / scale);
-    SDL_SetWindowSize(window, win_width, win_height);
-  }
+  int win_width = static_cast<int>(static_cast<float>(params.width) / scale);
+  int win_height =
+      static_cast<int>(static_cast<float>(params.height) / scale);
+  SDL_SetWindowSize(window, win_width, win_height);
 
   SDL_PropertiesID renderProps = SDL_CreateProperties();
   SDL_SetPointerProperty(renderProps, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER,
@@ -482,6 +480,8 @@ render_target::render_target(const render_target_creation_params& params)
                                            : SDL_LOGICAL_PRESENTATION_DISABLED;
   SDL_SetRenderLogicalPresentation(renderer, params.width, params.height, lp);
 
+  SDL_SyncWindow(window);
+  SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
   SDL_ShowWindow(window);
   SDL_SyncWindow(window);
 
