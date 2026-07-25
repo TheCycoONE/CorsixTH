@@ -423,6 +423,8 @@ render_target::render_target(const render_target_creation_params& params)
       direct_zoom{params.direct_zoom} {
   pixel_format = SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_ABGR8888);
 
+  SDL_SetHint(SDL_HINT_VIDEO_WAYLAND_SCALE_TO_DISPLAY, "0");
+
   SDL_PropertiesID winProps = SDL_CreateProperties();
   SDL_SetStringProperty(winProps, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
                         "CorsixTH");
@@ -443,11 +445,11 @@ render_target::render_target(const render_target_creation_params& params)
     throw std::runtime_error(SDL_GetError());
   }
 
-  float scale = SDL_GetWindowPixelDensity(window);
-  int win_width = static_cast<int>(static_cast<float>(params.width) / scale);
-  int win_height =
-      static_cast<int>(static_cast<float>(params.height) / scale);
-  SDL_SetWindowSize(window, win_width, win_height);
+  //float scale = SDL_GetWindowPixelDensity(window);
+  //int win_width = static_cast<int>(static_cast<float>(params.width) / scale);
+  //int win_height =
+  //    static_cast<int>(static_cast<float>(params.height) / scale);
+  //SDL_SetWindowSize(window, win_width, win_height);
 
   SDL_PropertiesID renderProps = SDL_CreateProperties();
   SDL_SetPointerProperty(renderProps, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER,
@@ -471,8 +473,10 @@ render_target::render_target(const render_target_creation_params& params)
   supports_target_textures = !!testTexture;
   SDL_DestroyTexture(testTexture);
 
-  int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
-  int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
+  //int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
+  //int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
+  int mw = params.min_width;
+  int mh = params.min_height;
   SDL_SetWindowMinimumSize(window, mw, mh);
 
   SDL_RendererLogicalPresentation lp = params.fullscreen
@@ -509,10 +513,14 @@ render_target::~render_target() {
 
 bool render_target::update(const render_target_creation_params& params) {
   float scale = SDL_GetWindowPixelDensity(window);
-  int pw = static_cast<int>(static_cast<float>(params.width) / scale);
-  int ph = static_cast<int>(static_cast<float>(params.height) / scale);
-  int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
-  int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
+  //int pw = static_cast<int>(static_cast<float>(params.width) / scale);
+  //int ph = static_cast<int>(static_cast<float>(params.height) / scale);
+  //int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
+  //int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
+  int pw = static_cast<int>(static_cast<float>(params.width));
+  int ph = static_cast<int>(static_cast<float>(params.height));
+  int mw = static_cast<int>(static_cast<float>(params.min_width));
+  int mh = static_cast<int>(static_cast<float>(params.min_height));
 
   bool bUpdateSize = (width != params.width) || (height != params.height);
   width = params.width;
@@ -712,6 +720,10 @@ int render_target::get_height() const {
   int h;
   SDL_GetCurrentRenderOutputSize(renderer, nullptr, &h);
   return static_cast<int>(std::ceil(h / draw_scale()));
+}
+
+float render_target::get_display_scale() const {
+  return SDL_GetWindowDisplayScale(window);
 }
 
 void render_target::start_nonoverlapping_draws() {

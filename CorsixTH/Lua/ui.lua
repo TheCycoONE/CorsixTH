@@ -173,6 +173,9 @@ function UI:UI(app, minimal)
   self.key_noted = false
   self.mouse_released = false
 
+  self.render_width, self.render_height, self.display_scale =
+      app.video:getRenderDimensions()
+
   self.down_count = 0
   if not minimal then
     self.default_cursor = app.gfx:loadMainCursor("default")
@@ -295,7 +298,7 @@ function UI:drawTooltip(canvas)
   end
 
   if self.tooltip_font then
-    self.tooltip_font:drawTooltip(canvas, self.tooltip.text, x, y, 200 * TheApp.config.ui_scale)
+    self.tooltip_font:drawTooltip(canvas, self.tooltip.text, x, y, 200 * self:getUIScale())
   end
 end
 
@@ -303,7 +306,7 @@ function UI:draw(canvas)
   local app = self.app
   if self.background then
     local bg_w, bg_h = self.background_width, self.background_height
-    local screen_w, screen_h = app.config.width, app.config.height
+    local screen_w, screen_h = self.render_width, self.render_height
     local factor = math.max(screen_w / bg_w, screen_h / bg_h)
     if canvas:scale(factor, "bitmap") or canvas:scale(factor) then
       self.background:draw(canvas, math.floor((screen_w - bg_w * factor) / 2), math.floor((screen_h - bg_h * factor) / 2))
@@ -606,6 +609,8 @@ function UI:changeResolution(width, height, display_scale)
 
   self.app.config.width = width
   self.app.config.height = height
+  self.render_width, self.render_height, self.display_scale =
+      self.app.video:getRenderDimensions()
 
   -- Redraw cursor
   local cursor = self.cursor
@@ -887,7 +892,7 @@ function UI:onMouseDown(code, x, y)
     repaint = true
   end
   self.down_count = self.down_count + 1
-  if x >= 3 and y >= 3 and x < self.app.config.width - 3 and y < self.app.config.height - 3 then
+  if x >= 3 and y >= 3 and x < self.render_width - 3 and y < self.render_height - 3 then
     self.buttons_down["mouse_"..button] = true
   end
 
@@ -1261,3 +1266,25 @@ end
 
 -- Stub for compatibility with savegames r1896-1921
 function UI:stopVideo() end
+
+-- Dimension of the Window. Whether this matches physical pixels depends
+-- on the operating system / video driver.
+function UI:getWindowDimensions()
+  return self.app.config.width, self.app.config.height
+end
+
+-- Game dimensions for the sake of drawing on the canvas
+function UI:getRenderDimensions()
+  return self.render_width, self.render_height, self.display_scale
+end
+
+-- Game dimensions for the sake of drawing the UI on the canvas
+-- considering UI scale
+function UI:getUIDimensions()
+  local s = self.app.config.ui_scale * self.display_scale
+  return self.render_width / s, self.render_height / s, s
+end
+
+function UI:getUIScale()
+  return self.app.config.ui_scale * self.display_scale
+end

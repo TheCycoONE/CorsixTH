@@ -65,9 +65,11 @@ local charsets = {
   ["mik"] = 2
 }
 
-function Graphics:Graphics(app, gfx_set, charset)
+function Graphics:Graphics(app, gfx_set, charset, config, target)
   self.app = app
-  self.target = self.app.video
+  self.target = target
+  self.config = config
+
   -- The cache is used to avoid reloading an object if it is already loaded
   self.cache = {
     raw = {},
@@ -96,14 +98,17 @@ function Graphics:Graphics(app, gfx_set, charset)
   -- created from sprite sheets.
   self.reload_functions_last = setmetatable({}, {__mode = "k"})
 
+  local _, _, ds = self.target:getRenderDimensions()
+  self.ui_scale = self.config.ui_scale * ds
+
   self:loadFontFile()
   self:_loadPalettes(gfx_set)
 
   local graphics_folder = nil
-  if self.app.config.use_new_graphics then
+  if self.config.use_new_graphics then
     -- Check if the config specifies a place to look for graphics in.
     -- Otherwise check in the default "Graphics" folder.
-    graphics_folder = self.app.config.new_graphics_folder or self.app:getFullPath("Graphics", true)
+    graphics_folder = self.config.new_graphics_folder or self.app:getFullPath("Graphics", true)
     if graphics_folder:sub(-1) ~= pathsep then
       graphics_folder = graphics_folder .. pathsep
     end
@@ -175,7 +180,7 @@ end
 function Graphics:loadFontFile()
   local lfs = require("lfs")
   local function check(path) return lfs.attributes(path, "mode") == "file" end
-  local config_path, compile_path = self.app.config.unicode_font, TH.GetCompileOptions().font
+  local config_path, compile_path = self.config.unicode_font, TH.GetCompileOptions().font
 
   local function getFontPath()
     local config_err, compile_err = "", ""
@@ -213,7 +218,7 @@ function Graphics:loadFontFile()
     self.ttf_font_data = font:read("*a")
     font:close()
     if self.ttf_font_data and config_path ~= font_file then
-      self.app.config.unicode_font = font_file
+      self.config.unicode_font = font_file
       self.app:saveConfig()
       print("Configured unicode font not found, using " .. font_file .. " instead.")
       print("This will be written to the config file.")
@@ -410,7 +415,8 @@ function Graphics:loadBuiltinFont()
     font = TH.bitmap_font()
     font:setSheet(sheet, charsets["cp437"]) -- CorsixTH only ships with a cp437 font
     font:setSeparation(1, 0)
-    font:setScaleFactor(TheApp.config.ui_scale)
+
+    font:setScaleFactor(self.ui_scale)
     self.load_info[font] = {self.loadBuiltinFont, self}
     self.builtin_font = font
   end
@@ -470,7 +476,9 @@ end
 
 function Graphics:onChangeUIScale()
   if self.builtin_font then
-    self.builtin_font:setScaleFactor(TheApp.config.ui_scale)
+    local _, _, ds = self.target:getRenderDimensions()
+    self.ui_scale = self.config.ui_scale * ds
+    self.builtin_font:setScaleFactor(self.ui_scale)
   end
   -- Update / replace fonts
   self:onChangeLanguage()
@@ -622,13 +630,13 @@ function Graphics:_loadTrueTypeFont(name, sprite_table, font_options)
   local cache = self.cache.language_fonts[cache_key]
   local font = cache and cache[sprite_table]
 
-  if font and font_options.apply_ui_scale and font_options.scale_factor ~= self.app.config.ui_scale then
-    font_options.scale_factor = self.app.config.ui_scale
+  if font and font_options.apply_ui_scale and font_options.scale_factor ~= self.ui_scale then
+    font_options.scale_factor = self.ui_scale
     font:setFontOptions(sprite_table, font_options)
     font:clearCache()
   elseif not font then
     if font_options.apply_ui_scale then
-      font_options.scale_factor = self.app.config.ui_scale
+      font_options.scale_factor = self.ui_scale
     end
 
     font = TH.freetype_font()
@@ -739,7 +747,7 @@ function Graphics:loadFont(sprite_table, font_options, y_sep, ttf_color, force_b
     font:setSeparation(font_options.x_sep or 0, font_options.y_sep or 0)
     font:setSheet(sprite_table, self.th_charset)
     if font_options.apply_ui_scale then
-      font:setScaleFactor(TheApp.config.ui_scale)
+      font:setScaleFactor(self.ui_scale)
     end
   else
     font = self:_loadTrueTypeFont("unicode", sprite_table, font_options)

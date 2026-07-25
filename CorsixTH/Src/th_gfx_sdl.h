@@ -305,6 +305,11 @@ class render_target {
   //! Get the height of the render target (in pixels)
   int get_height() const;
 
+  //! Get the suggested scale factor for the window
+  //!
+  //! Value provided by operating system / compositor
+  float get_display_scale() const;
+
   //! Enable optimisations for non-overlapping draws
   void start_nonoverlapping_draws();
 

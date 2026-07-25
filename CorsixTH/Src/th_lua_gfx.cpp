@@ -956,16 +956,12 @@ int l_surface_pop_clip(lua_State* L) {
   return 1;
 }
 
-int l_surface_get_width(lua_State* L) {
-  render_target* pCanvas = luaT_testuserdata<render_target>(L);
-  lua_pushinteger(L, pCanvas->get_width());
-  return 1;
-}
-
-int l_surface_get_height(lua_State* L) {
-  render_target* pCanvas = luaT_testuserdata<render_target>(L);
-  lua_pushinteger(L, pCanvas->get_height());
-  return 1;
+int l_surface_get_dimensions(lua_State* L) {
+  render_target* canvas = luaT_testuserdata<render_target>(L);
+  lua_pushinteger(L, canvas->get_width());
+  lua_pushinteger(L, canvas->get_height());
+  lua_pushnumber(L, canvas->get_display_scale());
+  return 3;
 }
 
 int l_surface_scale(lua_State* L) {
@@ -1193,8 +1189,7 @@ void lua_register_gfx(const lua_register_state* pState) {
     lcb.add_function(l_surface_rect, "drawRect");
     lcb.add_function(l_surface_push_clip, "pushClip");
     lcb.add_function(l_surface_pop_clip, "popClip");
-    lcb.add_function(l_surface_get_width, "getWidth");
-    lcb.add_function(l_surface_get_height, "getHeight");
+    lcb.add_function(l_surface_get_dimensions, "getRenderDimensions");
     lcb.add_function(l_surface_screenshot, "takeScreenshot");
     lcb.add_function(l_surface_scale, "scale");
     lcb.add_function(l_surface_set_caption, "setCaption");

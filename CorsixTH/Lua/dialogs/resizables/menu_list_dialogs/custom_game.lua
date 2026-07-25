@@ -110,8 +110,9 @@ function UICustomGame:buttonClicked(num)
   self.chosen_level_name = item.name
   self.chosen_level_description = item.intro
   if self.chosen_level_description then
-    local _, y, rows = self.label_font:sizeOf(self.chosen_level_description, details_width * TheApp.config.ui_scale)
-    local row_height = y / rows / TheApp.config.ui_scale
+    local s = self.ui:getUIScale()
+    local _, y, rows = self.label_font:sizeOf(self.chosen_level_description, details_width * s)
+    local row_height = y / rows / s
     self.max_rows_shown = math.floor(self.num_rows * 17 / row_height)
     self.details_scrollbar:setRange(1, rows, math.min(rows, self.max_rows_shown), 1)
   else
@@ -145,7 +146,7 @@ end
 
 function UICustomGame:draw(canvas, x, y)
   UIMenuList.draw(self, canvas, x, y)
-  local s = TheApp.config.ui_scale
+  local s = self.ui:getUIScale()
   x, y = self.x * s + x, self.y * s + y
 
   if self.chosen_level_name then

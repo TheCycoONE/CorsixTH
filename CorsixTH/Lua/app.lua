@@ -186,7 +186,7 @@ function App:init()
   corsixth.require("persistance")
   corsixth.require("graphics")
   local gfx_set = good_install_folder and (self.using_demo_files and "demo" or "full") or "base"
-  self.gfx = Graphics(self, gfx_set, charset)
+  self.gfx = Graphics(self, gfx_set, charset, self.config, self.video)
 
   -- Put up the loading screen
   if good_install_folder then

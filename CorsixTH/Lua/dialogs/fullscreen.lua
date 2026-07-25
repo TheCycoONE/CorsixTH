@@ -44,9 +44,7 @@ end
 
 function UIFullscreen:onChangeResolution()
   local app = self.ui.app
-  local s = app.config.ui_scale
-  local sw = app.config.width / s
-  local sh = app.config.height / s
+  local sw, sh = self.ui:getUIDimensions()
   if sw > self.width or sh > self.height then
     if not self.border_sprites then
       self.border_sprites = app.gfx:loadSpriteTable("Bitmap", "aux_ui", true)
@@ -80,7 +78,7 @@ end
 function UIFullscreen:draw(canvas, x, y)
   local sprites = self.border_sprites
   if sprites then
-    local s = TheApp.config.ui_scale
+    local s = self.ui:getUIScale()
     local draw = sprites.draw
     local scr_x = self.x * s + x
     local scr_y = self.y * s + y
@@ -104,7 +102,7 @@ end
 
 function UIFullscreen:onMouseDown(button, x, y)
   local repaint = Window.onMouseDown(self, button, x, y)
-  local s = TheApp.config.ui_scale
+  local s = self.ui:getUIScale()
   if button == "left" and not repaint and not (x >= 0 and y >= 0 and
       x < self.width * s and y < self.height * s) and self:hitTest(x, y) then
     return self:beginDrag(x, y)
@@ -113,7 +111,7 @@ function UIFullscreen:onMouseDown(button, x, y)
 end
 
 function UIFullscreen:hitTest(x, y)
-  local s = TheApp.config.ui_scale
+  local s = self.ui:getUIScale()
   if x >= 0 and y >= 0 and x < self.width * s and y < self.height * s then
     return true
   end

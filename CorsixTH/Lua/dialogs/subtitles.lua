@@ -25,8 +25,9 @@ class "Subtitles" (Window)
 local Subtitles = _G["Subtitles"]
 
 --! Subtitles constructor
-function Subtitles:Subtitles()
+function Subtitles:Subtitles(ui)
   self:Window()
+  self.ui = ui
   self.x = 0
   self.y = 0
   self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
@@ -49,7 +50,7 @@ end
 
 function Subtitles:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
-  local s = TheApp.config.ui_scale
+  local s = self.ui:getUIScale()
 
   if not self.queue:isEmpty() then
     if TheApp.config.enable_announcer_subtitles then
@@ -79,6 +80,7 @@ end
 
 function Subtitles:afterLoad(old, new)
   self.queue = SubtitleQueue()
+  self.ui = TheApp.ui
 end
 
 --! First in, first out queue for concurrently displayed subtitles

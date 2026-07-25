@@ -318,7 +318,6 @@ void mainloop(lua_State* L) {
     bool do_timer = false;
 
     do {
-      SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
 
       int nargs;
       switch (e.type) {
@@ -354,6 +353,7 @@ void mainloop(lua_State* L) {
           nargs = 4;
           break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
+          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_buttondown;
           push_app_dispatch(L, last_dispatch);
           lua_pushinteger(L, e.button.button);
@@ -362,6 +362,7 @@ void mainloop(lua_State* L) {
           nargs = 4;
           break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
+          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_buttonup;
           push_app_dispatch(L, dispatch_buttonup);
           lua_pushinteger(L, e.button.button);
@@ -370,6 +371,7 @@ void mainloop(lua_State* L) {
           nargs = 4;
           break;
         case SDL_EVENT_MOUSE_WHEEL:
+          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_mousewheel;
           push_app_dispatch(L, last_dispatch);
           lua_pushnumber(L, e.wheel.x);
@@ -379,6 +381,7 @@ void mainloop(lua_State* L) {
           nargs = 5;
           break;
         case SDL_EVENT_MOUSE_MOTION:
+          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_motion;
           push_app_dispatch(L, last_dispatch);
           lua_pushnumber(L, e.motion.x);
@@ -393,6 +396,7 @@ void mainloop(lua_State* L) {
           nargs = 1;
           break;
         case SDL_EVENT_PINCH_UPDATE:
+          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_pinch_update;
           push_app_dispatch(L, last_dispatch);
           lua_pushnumber(L, e.pinch.scale);
