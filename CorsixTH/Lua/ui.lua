@@ -550,6 +550,11 @@ function UI:setMenuBackground()
 end
 
 function UI:onChangeResolution()
+  -- Redraw cursor
+  local cursor = self.cursor
+  self.cursor = nil
+  self:setCursor(cursor)
+
   -- If we are in the main menu (== no world), reselect the background
   if not self.app.world then
     self:setMenuBackground()
@@ -590,7 +595,7 @@ function UI:unregisterHotkeyBox(box)
   end
 end
 
-function UI:changeResolution(width, height, display_scale)
+function UI:changeResolution(width, height)
   self.app:prepareVideoUpdate()
   local error_message = self.app.video:update(
       width,
@@ -607,19 +612,8 @@ function UI:changeResolution(width, height, display_scale)
     return false
   end
 
-  self.app.config.width = width
-  self.app.config.height = height
-  self.render_width, self.render_height, self.display_scale =
-      self.app.video:getRenderDimensions()
-
-  -- Redraw cursor
-  local cursor = self.cursor
-  self.cursor = nil
-  self:setCursor(cursor)
-  -- Save new setting in config
-  self.app:saveConfig()
-
-  self:onChangeResolution()
+  -- window resize and window pixel change events will fire,
+  -- handling the update
 
   return true
 end
@@ -992,13 +986,22 @@ function UI:getWindowActiveStatus()
 end
 
 --! Window has been resized by the user
---!param width (integer) New window width in physical pixels
---!param height (integer) New window height in physical pixels
---!param display_scale (number) The scale factor of the display (physical/logical pixels)
-function UI:onWindowResize(width, height, display_scale)
+--!param width (integer) New window width in window pixels
+--!param height (integer) New window height in window pixels
+function UI:onWindowResize(width, height)
   if not self.app.config.fullscreen then
-    self:changeResolution(width, height, display_scale)
+    self.app.config.width = width
+    self.app.config.height = height
+    self.app:saveConfig()
   end
+end
+
+function UI:onWindowPixelSizeChanged(width, height, scale)
+  self.render_width = width
+  self.render_height = height
+  self.display_scale = scale
+
+  self:onChangeResolution()
 end
 
 function UI:onMouseMove(x, y, dx, dy)

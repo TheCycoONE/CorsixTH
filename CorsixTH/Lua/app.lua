@@ -58,6 +58,7 @@ function App:App()
     motion = self.onMouseMove,
     active = self.onWindowActive,
     window_resize = self.onWindowResize,
+    window_pixel_size_change = self.onWindowPixelSizeChanged,
     music_over = self.onMusicOver,
     movie_over = self.onMovieOver,
     sound_over = self.onSoundOver,
@@ -1385,9 +1386,15 @@ function App:onWindowActive(...)
 end
 
 --! Window has been resized by the user
---! Call the UI to handle the new window size
+--! Call the UI to save the new window size
 function App:onWindowResize(...)
   return self.ui:onWindowResize(...)
+end
+
+--! Window has new render dimensions
+--! Call the UI to handle the new window size
+function App:onWindowPixelSizeChanged(...)
+  return self.ui:onWindowPixelSizeChanged(...)
 end
 
 function App:onMusicOver(...)

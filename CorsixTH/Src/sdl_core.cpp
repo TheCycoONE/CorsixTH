@@ -289,6 +289,8 @@ constexpr std::string_view dispatch_sound_over("sound_over");
 constexpr std::string_view dispatch_timer("timer");
 constexpr std::string_view dispatch_callback("callback");
 constexpr std::string_view dispatch_window_resize("window_resize");
+constexpr std::string_view dispatch_window_pixel_size_change(
+    "window_pixel_size_change");
 constexpr std::string_view dispatch_frame("frame");
 
 void mainloop(lua_State* L) {
@@ -316,9 +318,9 @@ void mainloop(lua_State* L) {
   while ((wait_error = SDL_WaitEvent(&e))) {
     bool do_frame = false;
     bool do_timer = false;
+    SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
 
     do {
-
       int nargs;
       switch (e.type) {
         case SDL_EVENT_QUIT:
@@ -353,7 +355,6 @@ void mainloop(lua_State* L) {
           nargs = 4;
           break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
-          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_buttondown;
           push_app_dispatch(L, last_dispatch);
           lua_pushinteger(L, e.button.button);
@@ -362,7 +363,6 @@ void mainloop(lua_State* L) {
           nargs = 4;
           break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
-          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_buttonup;
           push_app_dispatch(L, dispatch_buttonup);
           lua_pushinteger(L, e.button.button);
@@ -371,7 +371,6 @@ void mainloop(lua_State* L) {
           nargs = 4;
           break;
         case SDL_EVENT_MOUSE_WHEEL:
-          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_mousewheel;
           push_app_dispatch(L, last_dispatch);
           lua_pushnumber(L, e.wheel.x);
@@ -381,7 +380,6 @@ void mainloop(lua_State* L) {
           nargs = 5;
           break;
         case SDL_EVENT_MOUSE_MOTION:
-          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_motion;
           push_app_dispatch(L, last_dispatch);
           lua_pushnumber(L, e.motion.x);
@@ -396,7 +394,6 @@ void mainloop(lua_State* L) {
           nargs = 1;
           break;
         case SDL_EVENT_PINCH_UPDATE:
-          SDL_ConvertEventToRenderCoordinates(target->get_renderer(), &e);
           last_dispatch = dispatch_pinch_update;
           push_app_dispatch(L, last_dispatch);
           lua_pushnumber(L, e.pinch.scale);
@@ -419,11 +416,18 @@ void mainloop(lua_State* L) {
           lua_pushinteger(L, 0);
           nargs = 2;
           break;
-        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_WINDOW_RESIZED:
           last_dispatch = dispatch_window_resize;
           push_app_dispatch(L, last_dispatch);
-          lua_pushinteger(L, e.window.data1);
-          lua_pushinteger(L, e.window.data2);
+          lua_pushinteger(L, e.window.data1);  // window width
+          lua_pushinteger(L, e.window.data2);  // window height
+          nargs = 3;
+          break;
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+          last_dispatch = dispatch_window_pixel_size_change;
+          push_app_dispatch(L, last_dispatch);
+          lua_pushinteger(L, e.window.data1);  // render width
+          lua_pushinteger(L, e.window.data2);  // render height
           lua_pushnumber(L, SDL_GetWindowDisplayScale(target->get_window()));
           nargs = 4;
           break;
