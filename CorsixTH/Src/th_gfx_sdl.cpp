@@ -445,12 +445,6 @@ render_target::render_target(const render_target_creation_params& params)
     throw std::runtime_error(SDL_GetError());
   }
 
-  //float scale = SDL_GetWindowPixelDensity(window);
-  //int win_width = static_cast<int>(static_cast<float>(params.width) / scale);
-  //int win_height =
-  //    static_cast<int>(static_cast<float>(params.height) / scale);
-  //SDL_SetWindowSize(window, win_width, win_height);
-
   SDL_PropertiesID renderProps = SDL_CreateProperties();
   SDL_SetPointerProperty(renderProps, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER,
                          window);
@@ -473,8 +467,6 @@ render_target::render_target(const render_target_creation_params& params)
   supports_target_textures = !!testTexture;
   SDL_DestroyTexture(testTexture);
 
-  //int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
-  //int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
   int mw = params.min_width;
   int mh = params.min_height;
   SDL_SetWindowMinimumSize(window, mw, mh);
@@ -512,16 +504,6 @@ render_target::~render_target() {
 }
 
 bool render_target::update(const render_target_creation_params& params) {
-  float scale = SDL_GetWindowPixelDensity(window);
-  //int pw = static_cast<int>(static_cast<float>(params.width) / scale);
-  //int ph = static_cast<int>(static_cast<float>(params.height) / scale);
-  //int mw = static_cast<int>(static_cast<float>(params.min_width) / scale);
-  //int mh = static_cast<int>(static_cast<float>(params.min_height) / scale);
-  int pw = static_cast<int>(static_cast<float>(params.width));
-  int ph = static_cast<int>(static_cast<float>(params.height));
-  int mw = static_cast<int>(static_cast<float>(params.min_width));
-  int mh = static_cast<int>(static_cast<float>(params.min_height));
-
   bool bUpdateSize = (width != params.width) || (height != params.height);
   width = params.width;
   height = params.height;
@@ -533,14 +515,15 @@ bool render_target::update(const render_target_creation_params& params) {
   }
 
   if (bUpdateSize || bIsFullscreen != params.fullscreen) {
-    SDL_SetWindowSize(window, pw, ph);
+    SDL_SetWindowSize(window, params.width, params.height);
   }
 
   int old_min_width;
   int old_min_height;
   SDL_GetWindowMinimumSize(window, &old_min_width, &old_min_height);
-  if (old_min_width != mw || old_min_height != mh) {
-    SDL_SetWindowMinimumSize(window, mw, mh);
+  if (old_min_width != params.min_width ||
+      old_min_height != params.min_height) {
+    SDL_SetWindowMinimumSize(window, params.min_width, params.min_height);
   }
 
   SDL_RendererLogicalPresentation lp = params.fullscreen
