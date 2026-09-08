@@ -293,16 +293,20 @@ if(FETCH_SOUNDFONT)
 endif()
 
 if(FETCH_UNICODE_FONT)
-  FetchContent_Declare(
-    GoNoto
-    URL https://github.com/satbyy/go-noto-universal/releases/download/v7.0/GoNotoKurrent-Regular.ttf
-    URL_HASH SHA256=2f2cee5fbb2403df352ca2005247f6c4faa70f3086ebd31b6c62308b5f2f9865
-    DOWNLOAD_NO_EXTRACT TRUE
-    DOWNLOAD_NAME CorsixTHUnicode.ttf
+  set(GONOTO_FILE "${CMAKE_BINARY_DIR}/CorsixTHUnicode.ttf")
+  file(DOWNLOAD
+    https://github.com/satbyy/go-noto-universal/releases/download/v7.0/GoNotoKurrent-Regular.ttf
+    "${GONOTO_FILE}"
+    EXPECTED_HASH SHA256=2f2cee5fbb2403df352ca2005247f6c4faa70f3086ebd31b6c62308b5f2f9865
+    STATUS GONOTO_STATUS
   )
 
-  FetchContent_MakeAvailable(GoNoto)
-  set(GONOTO_FILE ${gonoto_SOURCE_DIR}/CorsixTHUnicode.ttf)
+  list(GET GONOTO_STATUS 0 GONOTO_STATUS_CODE)
+  if(NOT GONOTO_STATUS_CODE EQUAL 0)
+    message(FATAL_ERROR "Failed to download unicode font: ${GONOTO_STATUS}")
+  else()
+    message("  Unicode font found")
+  endif()
 endif()
 
 if(WITH_TRACY)
